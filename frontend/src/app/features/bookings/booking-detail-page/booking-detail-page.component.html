@@ -1,0 +1,41 @@
+<section class="booking-detail-page">
+  <div class="page-shell">
+    <p class="state-text" *ngIf="isLoading">Loading booking details...</p>
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <article class="detail-card" *ngIf="booking">
+      <header>
+        <p class="eyebrow">Booking Detail</p>
+        <h2>PNR {{ booking.pnrCode }}</h2>
+      </header>
+
+      <div class="meta-grid">
+        <div><span>Booking ID</span><strong>{{ booking.bookingId }}</strong></div>
+        <div><span>Status</span><strong>{{ booking.status }}</strong></div>
+        <div><span>Total Fare</span><strong>INR {{ booking.totalFare | number: '1.0-0' }}</strong></div>
+      </div>
+
+      <section>
+        <h3>Passengers</h3>
+        <div class="passenger-row" *ngFor="let passenger of passengers">
+          <span>{{ passenger.title }} {{ passenger.firstName }} {{ passenger.lastName }}</span>
+          <span>{{ passenger.seatNumber || 'Seat pending' }}</span>
+        </div>
+      </section>
+
+      <section>
+        <h3>Payment</h3>
+        <p>{{ payment?.status || 'NOT_STARTED' }}</p>
+      </section>
+
+      <div class="action-row">
+        <button type="button" class="cta-button" (click)="downloadTicket()">Download Ticket PDF</button>
+        <a routerLink="/my-bookings" class="secondary-button">Back to My Bookings</a>
+      </div>
+
+      <figure class="qr-panel" *ngIf="qrImageUrl">
+        <img [src]="qrImageUrl" alt="Ticket QR" />
+      </figure>
+    </article>
+  </div>
+</section>

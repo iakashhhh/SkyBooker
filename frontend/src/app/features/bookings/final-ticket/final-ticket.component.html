@@ -1,0 +1,75 @@
+<article class="final-ticket final-ticket--{{ mode }}">
+  <header class="ticket-header">
+    <div class="brand-block">
+      <div class="brand-logo">SB</div>
+      <div>
+        <p class="eyebrow">SkyBooker</p>
+        <h3>Boarding Pass</h3>
+      </div>
+    </div>
+    <div class="meta-top">
+      <div>
+        <span>PNR</span>
+        <strong>{{ booking.pnrCode }}</strong>
+      </div>
+      <div>
+        <span>Booking ID</span>
+        <strong>{{ booking.bookingId }}</strong>
+      </div>
+    </div>
+  </header>
+
+  <section class="ticket-main">
+    <div class="ticket-left">
+      <div class="passenger-strip">
+        <div>
+          <span>Passenger</span>
+          <strong>{{ passengerLabel }}</strong>
+          <small>{{ passengerCountLabel }}</small>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{{ booking.status }}</strong>
+        </div>
+      </div>
+
+      <div class="route-visual">
+        <span class="code">{{ routeFrom }}</span>
+        <div class="track"><span>✈</span></div>
+        <span class="code">{{ routeTo }}</span>
+      </div>
+
+      <div class="details-grid">
+        <div><span>Flight</span><strong>{{ flightNumber }}</strong></div>
+        <div><span>Seat</span><strong>{{ seatLabel }}</strong></div>
+        <div><span>Date</span><strong>{{ travelDate }}</strong></div>
+        <div><span>Time</span><strong>{{ departureTime }}</strong></div>
+        <div><span>Gate</span><strong>{{ gateLabel }}</strong></div>
+        <div><span>Boarding</span><strong>{{ boardingTime }}</strong></div>
+      </div>
+    </div>
+
+    <aside class="ticket-right">
+      <div class="qr-shell">
+        <qrcode [qrdata]="qrCodeValue" [width]="132" [errorCorrectionLevel]="'M'"></qrcode>
+      </div>
+      <p>Scan at check-in</p>
+    </aside>
+  </section>
+
+  <section class="fare-row">
+    <h4>Fare Summary</h4>
+    <div class="fare-grid">
+      <div><span>Base Fare</span><strong>INR {{ booking.baseFare | number: '1.0-0' }}</strong></div>
+      <div><span>Taxes</span><strong>INR {{ booking.taxes | number: '1.0-0' }}</strong></div>
+      <div class="total"><span>Total Fare</span><strong>INR {{ booking.totalFare | number: '1.0-0' }}</strong></div>
+    </div>
+  </section>
+
+  <footer class="rules">
+    <p>Arrive at the airport at least 2 hours before departure.</p>
+    <p>Carry a valid government ID for verification.</p>
+    <p>Cancellation and reschedule charges apply as per fare rules.</p>
+    <p class="booked-at">Booked at: {{ bookingDateTime }}</p>
+  </footer>
+</article>

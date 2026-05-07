@@ -43,7 +43,15 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login", "/actuator/**").permitAll()
+                        .requestMatchers(
+                            "/auth/register",
+                            "/auth/login",
+                            "/auth/google",
+                            "/auth/password/forgot",
+                            "/auth/password/reset",
+                            "/auth/internal/users/*/email",
+                            "/actuator/**"
+                        ).permitAll()
                     .requestMatchers("/auth/users").hasRole("ADMIN")
                     .requestMatchers("/auth/profile", "/auth/password", "/auth/deactivate", "/auth/logout", "/auth/refresh")
                     .hasAnyRole("PASSENGER", "ADMIN", "AIRLINE_STAFF")

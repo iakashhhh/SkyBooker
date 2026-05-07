@@ -1,0 +1,23 @@
+# Java
+target/
+*.class
+*.jar
+*.log
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env
+
+# IDE
+.idea/
+.vscode/
+.metadata/
+
+# Sonar
+.scannerwork/
+
+# OS
+.DS_Store

@@ -1,0 +1,124 @@
+<section class="card search-card">
+  <h2>Find Your Flight</h2>
+  <p class="subtitle">Search one-way and round-trip flights with live backend inventory.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid two-col">
+      <div class="form-group">
+        <label for="tripType">Trip Type</label>
+        <select id="tripType" formControlName="tripType">
+          <option value="ONE_WAY">One Way</option>
+          <option value="ROUND_TRIP">Round Trip</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="seatClass">Seat Class</label>
+        <select id="seatClass" formControlName="seatClass">
+          <option *ngFor="let option of seatClassOptions" [value]="option">{{ option.replaceAll('_', ' ') }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid two-col">
+      <div class="form-group">
+        <label for="origin">From</label>
+        <select id="origin" formControlName="origin">
+          <option value="">Select origin</option>
+          <option *ngFor="let airport of airportOptions" [value]="airport.iataCode">
+            {{ airport.city }} ({{ airport.iataCode }})
+          </option>
+        </select>
+        <p class="error-text" *ngIf="form.controls.origin.touched && form.controls.origin.invalid">
+          Select a valid origin airport.
+        </p>
+      </div>
+      <div class="form-group">
+        <label for="destination">To</label>
+        <select id="destination" formControlName="destination">
+          <option value="">Select destination</option>
+          <option *ngFor="let airport of airportOptions" [value]="airport.iataCode">
+            {{ airport.city }} ({{ airport.iataCode }})
+          </option>
+        </select>
+        <p class="error-text" *ngIf="form.controls.destination.touched && form.controls.destination.invalid">
+          Select a valid destination airport.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid two-col">
+      <div class="form-group">
+        <label for="journeyDate">Journey Date</label>
+        <input id="journeyDate" type="date" formControlName="journeyDate" [attr.min]="todayDate" />
+        <p class="error-text" *ngIf="form.controls.journeyDate.touched && form.controls.journeyDate.invalid">
+          Journey date is required.
+        </p>
+        <p class="error-text" *ngIf="form.controls.journeyDate.touched && form.controls.journeyDate.errors?.['pastDate']">
+          Past dates are not allowed.
+        </p>
+      </div>
+      <div class="form-group" *ngIf="form.controls.tripType.value === 'ROUND_TRIP'">
+        <label for="returnDate">Return Date</label>
+        <input id="returnDate" type="date" formControlName="returnDate" [attr.min]="todayDate" />
+        <p class="error-text" *ngIf="form.controls.returnDate.touched && form.controls.returnDate.invalid">
+          Return date is required for round-trip search.
+        </p>
+        <p class="error-text" *ngIf="form.controls.returnDate.touched && form.controls.returnDate.errors?.['dateOrder']">
+          Return date must be after journey date.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid four-col">
+      <div class="form-group">
+        <label for="minPrice">Min Price</label>
+        <input id="minPrice" type="number" formControlName="minPrice" placeholder="2000" min="0" />
+      </div>
+      <div class="form-group">
+        <label for="maxPrice">Max Price</label>
+        <input id="maxPrice" type="number" formControlName="maxPrice" placeholder="12000" min="0" />
+      </div>
+      <div class="form-group">
+        <label for="airlineId">Airline</label>
+        <select id="airlineId" formControlName="airlineId">
+          <option value="">All airlines</option>
+          <option *ngFor="let airline of airlineOptions" [value]="airline.airlineId">{{ airline.name }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="maxStops">Max Stops</label>
+        <input id="maxStops" type="number" formControlName="maxStops" min="0" max="2" />
+      </div>
+    </div>
+
+    <div class="grid two-col">
+      <div class="form-group">
+        <label for="departureWindow">Departure Window</label>
+        <select id="departureWindow" formControlName="departureWindow">
+          <option value="">Any</option>
+          <option *ngFor="let option of departureWindowOptions" [value]="option">{{ option }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="sortBy">Sort By</label>
+        <select id="sortBy" formControlName="sortBy">
+          <option *ngFor="let option of sortOptions" [value]="option.value">{{ option.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Search Flights</button>
+  </form>
+
+  <section class="pnr-card" id="pnr-status-section">
+    <h3>Track Booking by PNR</h3>
+    <p>Check booking status instantly without login.</p>
+    <div class="pnr-row">
+      <input [(ngModel)]="pnrCode" [ngModelOptions]="{standalone: true}" placeholder="Enter PNR (e.g. XYZ123)" maxlength="8" />
+      <button type="button" class="btn btn-secondary" (click)="findBookingByPnr()" [disabled]="isPnrLoading">
+        {{ isPnrLoading ? 'Checking...' : 'Check Status' }}
+      </button>
+    </div>
+    <p class="error-text" *ngIf="pnrError">{{ pnrError }}</p>
+  </section>
+</section>

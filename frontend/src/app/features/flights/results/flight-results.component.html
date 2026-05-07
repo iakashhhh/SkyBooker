@@ -1,0 +1,380 @@
+<section class="results-wrap">
+  <div class="results-hero">
+    <div class="results-summary">
+      <p class="eyebrow">Search Results</p>
+      <h2>{{ routeHeadline }}</h2>
+      <p class="subtitle">{{ travelHeadline }}</p>
+
+      <div class="summary-tags">
+        <span *ngFor="let tag of activeSearchTags">{{ tag }}</span>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <label class="sort-field">
+        <span>Sort by</span>
+        <select [ngModel]="filterSortBy" (ngModelChange)="reloadWithSort($event)">
+          <option *ngFor="let option of sortOptions" [value]="option.value">{{ option.label }}</option>
+        </select>
+      </label>
+      <button type="button" class="modify-btn" (click)="toggleFilterPanel()">
+        {{ isFilterPanelOpen ? 'Hide Filters' : 'Modify Filters' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <aside class="filter-panel" [class.open]="isFilterPanelOpen">
+      <div class="panel-card">
+        <div class="panel-head">
+          <div>
+            <p class="panel-label">Modify Search</p>
+            <h3>Update route, date, and filters</h3>
+          </div>
+        </div>
+
+        <div class="filter-grid">
+          <label>
+            Trip Type
+            <select [(ngModel)]="filterTripType">
+              <option value="ONE_WAY">One Way</option>
+              <option value="ROUND_TRIP">Round Trip</option>
+            </select>
+          </label>
+          <label>
+            Origin
+            <div class="airport-autocomplete">
+              <input
+                [(ngModel)]="filterOrigin"
+                maxlength="24"
+                placeholder="DEL"
+                autocomplete="off"
+                (focus)="onFilterCityFocus('origin')"
+                (blur)="onFilterCityBlur('origin')"
+                (input)="onFilterCityInput('origin', $any($event.target).value)" />
+              <div class="airport-dropdown" *ngIf="showFilterCityDropdown('origin')">
+                <button
+                  type="button"
+                  class="airport-option"
+                  *ngFor="let option of filterCitySuggestions.origin"
+                  (mousedown)="selectFilterCity('origin', option); $event.preventDefault()">
+                  <strong>{{ option.city }} ({{ option.code }})</strong>
+                  <span>{{ option.airport }}</span>
+                </button>
+              </div>
+            </div>
+          </label>
+          <label>
+            Destination
+            <div class="airport-autocomplete">
+              <input
+                [(ngModel)]="filterDestination"
+                maxlength="24"
+                placeholder="BOM"
+                autocomplete="off"
+                (focus)="onFilterCityFocus('destination')"
+                (blur)="onFilterCityBlur('destination')"
+                (input)="onFilterCityInput('destination', $any($event.target).value)" />
+              <div class="airport-dropdown" *ngIf="showFilterCityDropdown('destination')">
+                <button
+                  type="button"
+                  class="airport-option"
+                  *ngFor="let option of filterCitySuggestions.destination"
+                  (mousedown)="selectFilterCity('destination', option); $event.preventDefault()">
+                  <strong>{{ option.city }} ({{ option.code }})</strong>
+                  <span>{{ option.airport }}</span>
+                </button>
+              </div>
+            </div>
+          </label>
+          <label>
+            Departure
+            <input type="date" [(ngModel)]="filterJourneyDate" [attr.min]="todayDate" />
+          </label>
+          <label *ngIf="filterTripType === 'ROUND_TRIP'">
+            Return
+            <input type="date" [(ngModel)]="filterReturnDate" [attr.min]="todayDate" />
+          </label>
+          <label>
+            Cabin
+            <select [(ngModel)]="filterSeatClass">
+              <option *ngFor="let option of seatClassOptions" [value]="option">{{ option }}</option>
+            </select>
+          </label>
+          <label>
+            Departure Window
+            <select [(ngModel)]="filterDepartureWindow">
+              <option value="">Any</option>
+              <option *ngFor="let option of departureWindowOptions" [value]="option">{{ option }}</option>
+            </select>
+          </label>
+          <label>
+            Max Stops
+            <select [(ngModel)]="filterMaxStops">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="budget-card">
+          <div class="budget-head">
+            <span>Price Range</span>
+            <strong>INR {{ filterMinPrice }} - {{ filterMaxPrice }}</strong>
+          </div>
+          <input type="range" [(ngModel)]="filterMinPrice" min="0" [max]="priceCap" />
+          <input type="range" [(ngModel)]="filterMaxPrice" min="0" [max]="priceCap" />
+          <div class="budget-fields">
+            <label>
+              Min
+              <input type="number" [(ngModel)]="filterMinPrice" min="0" />
+            </label>
+            <label>
+              Max
+              <input type="number" [(ngModel)]="filterMaxPrice" min="0" />
+            </label>
+          </div>
+        </div>
+
+        <div class="panel-actions">
+          <button type="button" class="apply-btn" (click)="applyFilters()">Apply Filters</button>
+          <button type="button" class="reset-btn" (click)="resetFilters()">Reset</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="results-column">
+      <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="loading-text" *ngIf="isLoading">Loading flights...</p>
+
+      <section class="flex-strip panel-card" *ngIf="!isLoading && flexibleDateMode && flexibleDateOptions.length">
+        <div class="panel-head">
+          <div>
+            <p class="panel-label">Flexible Dates</p>
+            <h3>Compare nearby dates instantly</h3>
+          </div>
+        </div>
+        <div class="flex-strip-grid">
+          <button
+            type="button"
+            class="flex-date-card"
+            *ngFor="let option of flexibleDateOptions"
+            [class.selected]="selectedFlexibleDate === option.date"
+            (click)="selectFlexibleDate(option.date)">
+            <strong>{{ option.label }}</strong>
+            <span *ngIf="option.count > 0">{{ option.count }} flights</span>
+            <span *ngIf="option.count === 0">No flights</span>
+            <em *ngIf="option.minPrice">INR {{ option.minPrice | number: '1.0-0' }}</em>
+          </button>
+        </div>
+      </section>
+
+      <section class="result-panel" *ngIf="!isLoading">
+        <div class="section-head">
+          <div>
+            <p class="panel-label">Outbound</p>
+            <h3>{{ outboundFlights.length }} option{{ outboundFlights.length === 1 ? '' : 's' }}</h3>
+          </div>
+        </div>
+
+        <ng-container *ngIf="outboundFlights.length; else noOutbound">
+          <div class="flight-grid">
+            <article class="flight-card" *ngFor="let flight of paginatedOutboundFlights" (click)="openFlightDetails(flight, 'OUTBOUND')">
+              <div class="flight-top">
+                <div>
+                  <p class="airline-name">{{ getAirlineName(flight) }}</p>
+                  <span class="meta-line">{{ flight.flightNumber }} · {{ flight.aircraftType }}</span>
+                </div>
+                <span class="seat-pill">{{ getSeatsLeft(flight) }} seats left</span>
+              </div>
+
+              <div class="card-main">
+                <div class="time-block">
+                  <strong>{{ flight.departureTime | date: 'HH:mm' }}</strong>
+                  <span>{{ flight.originAirportCode }}</span>
+                </div>
+                <div class="route-line">
+                  <span>{{ formatFlightDuration(flight.durationMinutes) }}</span>
+                  <div class="line"></div>
+                  <small>{{ flight.numberOfStops === 0 ? 'Direct' : (flight.numberOfStops + ' stop') }}</small>
+                </div>
+                <div class="time-block">
+                  <strong>{{ flight.arrivalTime | date: 'HH:mm' }}</strong>
+                  <span>{{ flight.destinationAirportCode }}</span>
+                </div>
+                <div class="price-block">
+                  <span>from</span>
+                  <strong>INR {{ flight.displayedPrice | number: '1.0-0' }}</strong>
+                  <button type="button" (click)="openFlightDetails(flight, 'OUTBOUND'); $event.stopPropagation()">Choose</button>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="pagination-bar">
+            <div class="page-size-control">
+              <label for="page-size-outbound">Rows</label>
+              <select
+                id="page-size-outbound"
+                [ngModel]="selectedPageSize"
+                (ngModelChange)="onPageSizeChange($event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </div>
+
+            <p class="page-info">{{ getShowingText('OUTBOUND') }}</p>
+
+            <nav class="page-nav" *ngIf="outboundTotalPages > 1">
+              <button type="button" class="page-btn nav-btn" [disabled]="isPreviousDisabled('OUTBOUND')" (click)="goToPreviousPage('OUTBOUND')">
+                Prev
+              </button>
+
+              <ng-container *ngFor="let page of getVisiblePageButtons('OUTBOUND')">
+                <span class="page-ellipsis" *ngIf="page === '...'">...</span>
+                <button
+                  type="button"
+                  class="page-btn"
+                  *ngIf="page !== '...'"
+                  [class.active]="isPageActive('OUTBOUND', page)"
+                  (click)="goToPage('OUTBOUND', page)">
+                  {{ page }}
+                </button>
+              </ng-container>
+
+              <button type="button" class="page-btn nav-btn" [disabled]="isNextDisabled('OUTBOUND')" (click)="goToNextPage('OUTBOUND')">
+                Next
+              </button>
+            </nav>
+          </div>
+        </ng-container>
+        <ng-template #noOutbound>
+          <div class="empty-card">
+            <h4>No flights available</h4>
+            <p>Try adjusting your price range, stops, cabin, or travel date.</p>
+          </div>
+        </ng-template>
+      </section>
+
+      <section class="result-panel" *ngIf="tripType === 'ROUND_TRIP' && !isLoading">
+        <div class="section-head">
+          <div>
+            <p class="panel-label">Return</p>
+            <h3>{{ returnFlights.length }} option{{ returnFlights.length === 1 ? '' : 's' }}</h3>
+          </div>
+        </div>
+
+        <ng-container *ngIf="returnFlights.length; else noReturn">
+          <div class="flight-grid">
+            <article class="flight-card" *ngFor="let flight of paginatedReturnFlights" (click)="openFlightDetails(flight, 'RETURN')">
+              <div class="flight-top">
+                <div>
+                  <p class="airline-name">{{ getAirlineName(flight) }}</p>
+                  <span class="meta-line">{{ flight.flightNumber }} · {{ flight.aircraftType }}</span>
+                </div>
+                <span class="seat-pill">{{ getSeatsLeft(flight) }} seats left</span>
+              </div>
+
+              <div class="card-main">
+                <div class="time-block">
+                  <strong>{{ flight.departureTime | date: 'HH:mm' }}</strong>
+                  <span>{{ flight.originAirportCode }}</span>
+                </div>
+                <div class="route-line">
+                  <span>{{ formatFlightDuration(flight.durationMinutes) }}</span>
+                  <div class="line"></div>
+                  <small>{{ flight.numberOfStops === 0 ? 'Direct' : (flight.numberOfStops + ' stop') }}</small>
+                </div>
+                <div class="time-block">
+                  <strong>{{ flight.arrivalTime | date: 'HH:mm' }}</strong>
+                  <span>{{ flight.destinationAirportCode }}</span>
+                </div>
+                <div class="price-block">
+                  <span>from</span>
+                  <strong>INR {{ flight.displayedPrice | number: '1.0-0' }}</strong>
+                  <button type="button" (click)="openFlightDetails(flight, 'RETURN'); $event.stopPropagation()">Choose</button>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="pagination-bar">
+            <div class="page-size-control">
+              <label for="page-size-return">Rows</label>
+              <select
+                id="page-size-return"
+                [ngModel]="selectedPageSize"
+                (ngModelChange)="onPageSizeChange($event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </div>
+
+            <p class="page-info">{{ getShowingText('RETURN') }}</p>
+
+            <nav class="page-nav" *ngIf="returnTotalPages > 1">
+              <button type="button" class="page-btn nav-btn" [disabled]="isPreviousDisabled('RETURN')" (click)="goToPreviousPage('RETURN')">
+                Prev
+              </button>
+
+              <ng-container *ngFor="let page of getVisiblePageButtons('RETURN')">
+                <span class="page-ellipsis" *ngIf="page === '...'">...</span>
+                <button
+                  type="button"
+                  class="page-btn"
+                  *ngIf="page !== '...'"
+                  [class.active]="isPageActive('RETURN', page)"
+                  (click)="goToPage('RETURN', page)">
+                  {{ page }}
+                </button>
+              </ng-container>
+
+              <button type="button" class="page-btn nav-btn" [disabled]="isNextDisabled('RETURN')" (click)="goToNextPage('RETURN')">
+                Next
+              </button>
+            </nav>
+          </div>
+        </ng-container>
+        <ng-template #noReturn>
+          <div class="empty-card">
+            <h4>No flights available</h4>
+            <p>Adjust your return date or broaden your filters to see more options.</p>
+          </div>
+        </ng-template>
+      </section>
+    </div>
+  </div>
+</section>
+
+<section class="flight-modal-backdrop" *ngIf="isDetailsOpen && selectedFlight" (click)="closeFlightDetails()">
+  <article class="flight-modal" (click)="$event.stopPropagation()">
+    <header>
+      <h3>{{ selectedFlight.originAirportCode }} to {{ selectedFlight.destinationAirportCode }}</h3>
+      <button type="button" (click)="closeFlightDetails()">✕</button>
+    </header>
+
+    <p class="operator">
+      {{ getAirlineName(selectedFlight) }} · {{ selectedFlight.flightNumber }} · {{ selectedFlightDirection }}
+    </p>
+
+    <div class="segment-card" *ngFor="let segment of getFlightSegments(selectedFlight)">
+      <div class="segment-times">
+        <div>
+          <strong>{{ segment.departureTime | date: 'HH:mm' }} {{ segment.fromCode }}</strong>
+          <p>{{ segment.fromName }} ({{ segment.fromCode }})</p>
+        </div>
+        <div>
+          <strong>{{ segment.arrivalTime | date: 'HH:mm' }} {{ segment.toCode }}</strong>
+          <p>{{ segment.toName }} ({{ segment.toCode }})</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="fare-box">
+      <p>{{ formatFlightDuration(selectedFlight.durationMinutes) }} · {{ selectedFlight.numberOfStops === 0 ? 'Direct flight' : selectedFlight.numberOfStops + ' stop' }}</p>
+      <div class="fare-actions">
+        <strong>INR {{ selectedFlight.displayedPrice | number: '1.0-0' }}</strong>
+        <button type="button" class="continue-btn" (click)="goToSeatSelection()">Continue</button>
+      </div>
+    </div>
+  </article>
+</section>

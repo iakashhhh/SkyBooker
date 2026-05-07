@@ -1,0 +1,133 @@
+.summary-shell {
+  position: sticky;
+  top: 94px;
+}
+
+.timer-card {
+  border-radius: 14px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  background: linear-gradient(90deg, #ff9800, #ff6f00);
+}
+
+.timer-card p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.timer-card strong {
+  display: block;
+  font-size: 2rem;
+  margin-top: 0.25rem;
+}
+
+.summary-card h3 {
+  margin-top: 0;
+  font-size: 1.7rem;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 132px);
+}
+
+.summary-card h4 {
+  margin: 0.25rem 0 0.6rem;
+}
+
+.selected-seats-panel {
+  min-height: 0;
+}
+
+.selected-seats-list {
+  display: grid;
+  gap: 0.55rem;
+  max-height: 260px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.selected-seat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem;
+  border-radius: 10px;
+  border: 1px solid #d8e5f5;
+  background: #f4f8ff;
+  margin-bottom: 0.55rem;
+}
+
+.selected-seat strong {
+  font-size: 1rem;
+}
+
+.selected-seat p {
+  margin: 0.15rem 0 0;
+  color: #5f7090;
+}
+
+.selected-seat span {
+  color: #0052cc;
+  font-weight: 700;
+}
+
+.empty {
+  margin: 0;
+  color: #8191a9;
+}
+
+.fare-note {
+  margin: 0.85rem 0 0;
+  color: #5f7090;
+  font-size: 0.9rem;
+}
+
+.price-breakdown {
+  margin-top: 1rem;
+  border-top: 1px solid #e2eaf5;
+  padding-top: 0.8rem;
+}
+
+.price-breakdown div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.price-breakdown span {
+  color: #5f7090;
+}
+
+.price-breakdown .total {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #e2eaf5;
+}
+
+.price-breakdown .total strong {
+  color: #0f9d4f;
+  font-size: 1.5rem;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  margin-top: auto;
+}
+
+.btn-secondary {
+  border: 1px solid #c9d7eb;
+  background: #ffffff;
+  color: #34527b;
+}
+
+@media (max-width: 960px) {
+  .summary-shell {
+    position: static;
+  }
+}

@@ -1,0 +1,65 @@
+<section class="pnr-page">
+  <div class="pnr-shell">
+    <article class="pnr-search-card">
+      <p class="eyebrow">Booking Lookup</p>
+      <h1>Check Booking Status</h1>
+      <p class="subtitle">Enter your PNR to view booking details</p>
+
+      <form [formGroup]="pnrForm" (ngSubmit)="checkStatus()" class="pnr-form">
+        <label for="pnr">PNR</label>
+        <input
+          id="pnr"
+          type="text"
+          formControlName="pnr"
+          placeholder="Example: EV7P4B"
+          maxlength="12" />
+        <p class="input-error" *ngIf="showFieldError">Please enter a valid PNR.</p>
+
+        <button class="check-btn" type="submit" [disabled]="isLoading || pnrForm.invalid">
+          {{ isLoading ? 'Checking...' : 'Check Status' }}
+        </button>
+      </form>
+    </article>
+
+    <div class="lookup-state" *ngIf="isLoading">
+      <span class="spinner" aria-hidden="true"></span>
+      <p>Fetching booking details...</p>
+    </div>
+
+    <p class="lookup-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <article class="booking-result-card" *ngIf="booking && !isLoading">
+      <div class="result-head">
+        <h2>Booking Details</h2>
+        <span class="status-pill" [ngClass]="statusClass">{{ booking.status }}</span>
+      </div>
+
+      <div class="result-grid">
+        <div>
+          <p class="label">Passenger Name</p>
+          <p class="value">{{ passengerName }}</p>
+        </div>
+        <div>
+          <p class="label">Route</p>
+          <p class="value">{{ routeText }}</p>
+        </div>
+        <div>
+          <p class="label">Flight Number</p>
+          <p class="value">{{ flight?.flightNumber || 'Unavailable' }}</p>
+        </div>
+        <div>
+          <p class="label">Airline</p>
+          <p class="value">{{ airlineName }}</p>
+        </div>
+        <div>
+          <p class="label">Date & Time</p>
+          <p class="value">{{ flightDateTime }}</p>
+        </div>
+        <div>
+          <p class="label">Seat(s)</p>
+          <p class="value">{{ seatText }}</p>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>

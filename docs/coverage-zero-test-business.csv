@@ -1,0 +1,3 @@
+file,module,ecosystem,total_lines,covered_lines,coverage_pct,test_exists,priority
+"backend/notification-service/src/main/java/com/skybooker/notificationservice/service/impl/NotificationServiceImpl.java","notification-service",backend,323,0,0.00,false,HIGH
+"backend/airline-airport-service/src/main/java/com/skybooker/airlineairportservice/service/ReferenceDataSeeder.java","airline-airport-service",backend,63,0,0.00,false,HIGH

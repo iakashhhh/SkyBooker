@@ -1,0 +1,826 @@
+<section class="admin-page">
+  <div class="page-shell">
+    <section class="toast-stack" *ngIf="statusMessage || actionErrorMessage">
+      <article class="toast-item toast-success" *ngIf="statusMessage">
+        <span class="toast-icon" aria-hidden="true">✓</span>
+        <p>{{ statusMessage }}</p>
+      </article>
+      <article class="toast-item toast-error" *ngIf="actionErrorMessage">
+        <span class="toast-icon" aria-hidden="true">!</span>
+        <p>{{ actionErrorMessage }}</p>
+      </article>
+    </section>
+
+    <section class="retry-state" *ngIf="!isLoading && errorMessage">
+      <h3>Failed to load operations data</h3>
+      <p>{{ errorMessage }}</p>
+      <button type="button" class="primary-btn" (click)="retryLoadData()">Retry</button>
+    </section>
+
+    <ng-container *ngIf="isLoading && !errorMessage">
+      <section class="skeleton-grid" *ngIf="section === 'dashboard'">
+        <article class="skeleton-card" *ngFor="let _ of [1,2,3,4,5,6]"></article>
+      </section>
+      <section class="skeleton-table" *ngIf="section !== 'dashboard'">
+        <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5,6]"></div>
+      </section>
+    </ng-container>
+
+    <ng-container *ngIf="!isLoading && !errorMessage">
+      <section class="retry-state" *ngIf="!canAccessCurrentSection">
+        <h3>Restricted section</h3>
+        <p>{{ permissionErrorMessage }}</p>
+      </section>
+
+      <ng-container *ngIf="canAccessCurrentSection">
+      <ng-container *ngIf="section === 'dashboard'">
+        <section class="dashboard-stats-grid">
+          <article class="dashboard-stat-card" *ngFor="let stat of dashboardStats" [ngClass]="'tone-' + stat.tone">
+            <div class="stat-top">
+              <span class="stat-icon" [ngClass]="'tone-' + stat.tone">
+                <svg [ngSwitch]="stat.icon" viewBox="0 0 24 24">
+                  <path *ngSwitchCase="'users'" d="M7.5 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm9 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2.5 19a5 5 0 0 1 10 0M13.5 19a4.5 4.5 0 0 1 9 0" />
+                  <path *ngSwitchCase="'airline'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+                  <path *ngSwitchCase="'flight'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+                  <path *ngSwitchCase="'booking'" d="M5 7h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2zm4 0v10" />
+                  <path *ngSwitchCase="'revenue'" d="M12 3v18M16.5 7.5c0-1.9-2-3.5-4.5-3.5S7.5 5.6 7.5 7.5 9.5 11 12 11s4.5 1.6 4.5 3.5-2 3.5-4.5 3.5-4.5-1.6-4.5-3.5" />
+                  <path *ngSwitchCase="'clock'" d="M12 6v6l4 2m4-2a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" />
+                  <path *ngSwitchCase="'passengers'" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />
+                  <path *ngSwitchCase="'airport'" d="M4 12h16M12 4v16M5 5l14 14M19 5 5 19" />
+                  <path *ngSwitchDefault d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </span>
+              <span class="stat-delta" *ngIf="stat.delta">{{ stat.delta }}</span>
+            </div>
+            <strong>{{ stat.value }}</strong>
+            <span>{{ stat.label }}</span>
+            <svg class="stat-watermark" [ngSwitch]="stat.icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path *ngSwitchCase="'users'" d="M7.5 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm9 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2.5 19a5 5 0 0 1 10 0M13.5 19a4.5 4.5 0 0 1 9 0" />
+              <path *ngSwitchCase="'airline'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+              <path *ngSwitchCase="'flight'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+              <path *ngSwitchCase="'booking'" d="M5 7h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2zm4 0v10" />
+              <path *ngSwitchCase="'revenue'" d="M12 3v18M16.5 7.5c0-1.9-2-3.5-4.5-3.5S7.5 5.6 7.5 7.5 9.5 11 12 11s4.5 1.6 4.5 3.5-2 3.5-4.5 3.5-4.5-1.6-4.5-3.5" />
+              <path *ngSwitchCase="'clock'" d="M12 6v6l4 2m4-2a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" />
+              <path *ngSwitchCase="'passengers'" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />
+              <path *ngSwitchCase="'airport'" d="M4 12h16M12 4v16M5 5l14 14M19 5 5 19" />
+              <path *ngSwitchDefault d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          </article>
+        </section>
+
+        <section class="dashboard-quick-actions">
+          <div class="section-head"><h3>Quick Actions</h3></div>
+          <div class="action-card-grid" [class.admin-actions]="isAdmin">
+            <a class="action-card" *ngFor="let action of dashboardActions" [routerLink]="action.route" [ngClass]="'tone-' + action.tone" [attr.aria-label]="action.title">
+              <span class="action-icon">
+                <svg [ngSwitch]="action.icon" viewBox="0 0 24 24">
+                  <path *ngSwitchCase="'create'" d="M12 5v14M5 12h14" />
+                  <path *ngSwitchCase="'booking'" d="M5 7h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2zm4 0v10" />
+                  <path *ngSwitchCase="'schedule'" d="M3 6h18M7 3v6m10-6v6M5 10h14v10H5z" />
+                  <path *ngSwitchCase="'airline'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+                  <path *ngSwitchCase="'airport'" d="M4 12h16M12 4v16M5 5l14 14M19 5 5 19" />
+                  <path *ngSwitchCase="'passenger'" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />
+                  <path *ngSwitchDefault d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </span>
+              <strong>{{ action.title }}</strong>
+              <span>{{ action.description }}</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="dashboard-insights-grid">
+          <article class="overview-card recent-bookings-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-label">Recent Bookings</p>
+                <h3>Latest booking activity</h3>
+              </div>
+            </div>
+            <div class="booking-list">
+              <div class="booking-row" *ngFor="let booking of recentBookingRows">
+                <span class="booking-icon"><svg viewBox="0 0 24 24"><path d="M5 7h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2zm4 0v10" /></svg></span>
+                <div class="booking-copy">
+                  <strong>{{ booking.code }}</strong>
+                  <p>{{ booking.passenger }} · {{ booking.route }} · {{ booking.date }}</p>
+                </div>
+                <span class="status-chip" [ngClass]="statusBadgeClass(booking.status)">{{ formatBookingStatus(booking.status) }}</span>
+              </div>
+              <p class="state-text" *ngIf="!recentBookingRows.length">No bookings available.</p>
+            </div>
+          </article>
+
+          <article class="overview-card side-list-card">
+            <div class="panel-head">
+              <div>
+                <p class="panel-label">{{ isAdmin ? 'Recent Users' : 'Recent Passengers' }}</p>
+                <h3>{{ isAdmin ? 'Latest account updates' : 'Latest passenger updates' }}</h3>
+              </div>
+            </div>
+            <div class="side-list">
+              <div class="side-row" *ngFor="let row of sideRows">
+                <span class="side-avatar">{{ row.name.charAt(0) || 'U' }}</span>
+                <div class="side-copy">
+                  <strong>{{ row.name }}</strong>
+                  <p>{{ row.sub }}</p>
+                  <small>{{ row.meta }}</small>
+                </div>
+                <span class="status-chip" [ngClass]="statusBadgeClass(row.status)">{{ formatBookingStatus(row.status) }}</span>
+              </div>
+              <p class="state-text" *ngIf="!sideRows.length">{{ isAdmin ? 'No users available.' : 'No passengers available.' }}</p>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-trend-grid">
+          <article class="overview-card trend-card">
+            <div class="panel-head"><div><p class="panel-label">Bookings Trend</p><h3>Weekly booking movement</h3></div></div>
+            <div class="trend-plot" *ngIf="hasBookingTrendData; else emptyBookingTrend">
+              <svg viewBox="0 0 320 160" preserveAspectRatio="none">
+                <defs><linearGradient id="bookingAreaGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#3f66f4" stop-opacity="0.3" /><stop offset="100%" stop-color="#3f66f4" stop-opacity="0.04" /></linearGradient></defs>
+                <polygon [attr.points]="bookingTrendArea" fill="url(#bookingAreaGradient)"></polygon>
+                <polyline [attr.points]="bookingTrendPoints" fill="none" stroke="#3f66f4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+              </svg>
+              <div class="trend-axis"><span *ngFor="let label of weekdayLabels">{{ label }}</span></div>
+            </div>
+            <ng-template #emptyBookingTrend><p class="state-text">No booking trend data available.</p></ng-template>
+          </article>
+
+          <article class="overview-card trend-card">
+            <div class="panel-head"><div><p class="panel-label">Revenue Trend</p><h3>Weekly revenue movement</h3></div></div>
+            <div class="trend-plot" *ngIf="hasRevenueTrendData; else emptyRevenueTrend">
+              <svg viewBox="0 0 320 160" preserveAspectRatio="none">
+                <defs><linearGradient id="revenueAreaGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#2fa86f" stop-opacity="0.3" /><stop offset="100%" stop-color="#2fa86f" stop-opacity="0.04" /></linearGradient></defs>
+                <polygon [attr.points]="revenueTrendArea" fill="url(#revenueAreaGradient)"></polygon>
+                <polyline [attr.points]="revenueTrendPoints" fill="none" stroke="#2fa86f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+              </svg>
+              <div class="trend-axis"><span *ngFor="let label of weekdayLabels">{{ label }}</span></div>
+            </div>
+            <ng-template #emptyRevenueTrend><p class="state-text">No revenue trend data available.</p></ng-template>
+          </article>
+        </section>
+      </ng-container>
+
+      <section class="management-grid flights-grid" *ngIf="section === 'flights'">
+        <article class="form-card">
+          <div class="panel-head">
+            <div>
+              <p class="panel-label">Flight Editor</p>
+              <h3>{{ editingFlightId ? 'Update flight' : 'Create new flight' }}</h3>
+            </div>
+            <button type="button" class="ghost-btn" (click)="resetFlightForm()">Reset</button>
+          </div>
+          <p class="form-banner" *ngIf="duplicateFlightBanner">{{ duplicateFlightBanner }}</p>
+          <form [formGroup]="flightForm" (ngSubmit)="saveFlight()" class="editor-form">
+            <label>
+              Flight Number
+              <input type="text" formControlName="flightNumber" placeholder="AI-501" />
+            </label>
+            <label *ngIf="isAdmin">
+              Airline ID
+              <input type="number" formControlName="airlineId" min="1" />
+            </label>
+            <label *ngIf="isStaff">
+              Airline ID (Assigned)
+              <input type="text" [value]="staffAirlineMapping?.airlineId || ''" readonly />
+            </label>
+            <label>
+              Origin (IATA)
+              <input type="text" formControlName="originAirportCode" placeholder="DEL" maxlength="5" />
+            </label>
+            <label>
+              Destination (IATA)
+              <input type="text" formControlName="destinationAirportCode" placeholder="BLR" maxlength="5" />
+            </label>
+            <label>
+              Departure Time
+              <input type="datetime-local" formControlName="departureTime" />
+            </label>
+            <label>
+              Arrival Time
+              <input type="datetime-local" formControlName="arrivalTime" />
+            </label>
+            <label>
+              Duration (minutes)
+              <input type="number" formControlName="durationMinutes" min="1" />
+            </label>
+            <label>
+              Number of Stops
+              <input type="number" formControlName="numberOfStops" min="0" max="1" />
+            </label>
+            <label *ngIf="(flightForm.controls.numberOfStops.value ?? 0) > 0">
+              Via Airport (IATA)
+              <input type="text" formControlName="viaAirportCode" placeholder="MUM" maxlength="5" />
+            </label>
+            <label>
+              Flight Status
+              <select formControlName="status">
+                <option *ngFor="let status of flightStatusOptions" [value]="status">{{ status }}</option>
+              </select>
+            </label>
+            <label>
+              Aircraft Type
+              <select formControlName="aircraftType">
+                <option *ngFor="let aircraft of aircraftTypeOptions" [value]="aircraft">{{ aircraft }}</option>
+              </select>
+            </label>
+            <label>
+              Total Seats
+              <input type="number" formControlName="totalSeats" min="1" />
+            </label>
+            <label>
+              Available Seats
+              <input type="number" formControlName="availableSeats" min="0" />
+            </label>
+            <label>
+              Base Price (INR)
+              <input type="number" formControlName="basePrice" min="1" step="0.01" />
+            </label>
+            <button type="submit" class="primary-btn" [disabled]="isSaving">
+              {{ isSaving ? 'Saving...' : (editingFlightId ? 'Update Flight' : 'Create Flight') }}
+            </button>
+          </form>
+        </article>
+
+        <article class="table-card">
+          <div class="panel-head">
+            <div>
+              <p class="panel-label">Flight Operations</p>
+              <h3>{{ getSectionTotal('flights') }} flights available</h3>
+            </div>
+            <span class="chip" *ngIf="flightDashboard">Today: {{ flightDashboard.todayFlights }}</span>
+          </div>
+
+          <div class="table-tools">
+            <div class="search-control">
+              <input type="text" [value]="flightSearchTerm" (input)="onFlightSearchInput($any($event.target).value)" placeholder="Search by flight number or route..." aria-label="Search flights" />
+              <button type="button" class="ghost-btn small-btn" *ngIf="flightSearchTerm" (click)="clearFlightSearch()">Clear</button>
+            </div>
+            <div class="chip-row">
+              <button type="button" class="chip-action" *ngFor="let status of statusChips" [class.active]="flightStatusFilter === status" (click)="setFlightStatusFilter(status)">{{ status }}</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Flight</th>
+                  <th>Route</th>
+                  <th>Departure</th>
+                  <th>Status</th>
+                  <th>Seats</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let flight of pagedFlights">
+                  <td>{{ flight.flightNumber }}</td>
+                  <td>
+                    {{ flight.originAirportCode }} -> {{ flight.destinationAirportCode }}
+                    <span *ngIf="flight.numberOfStops > 0 && flight.viaAirportCode">(via {{ flight.viaAirportCode }})</span>
+                  </td>
+                  <td>{{ flight.departureTime | date: 'medium' }}</td>
+                  <td><span class="status-chip" [ngClass]="statusBadgeClass(flight.status)">{{ formatBookingStatus(flight.status) }}</span></td>
+                  <td>
+                    <div>{{ flight.availableSeats }} / {{ flight.totalSeats }}</div>
+                    <div class="seat-fill-track">
+                      <span class="seat-fill-bar" [ngClass]="getFlightLoadClass(flight)" [style.width.%]="getFlightLoadPercent(flight)"></span>
+                    </div>
+                  </td>
+                  <td class="action-cell">
+                    <button type="button" class="ghost-btn small-btn" [attr.aria-label]="'Edit flight ' + flight.flightNumber" (click)="editFlight(flight)">Edit</button>
+                    <button type="button" class="ghost-btn small-btn" [attr.aria-label]="'Duplicate flight ' + flight.flightNumber" (click)="duplicateFlight(flight)">Duplicate</button>
+                    <button type="button" class="ghost-btn small-btn" *ngIf="flight.status === 'ON_TIME'" [attr.aria-label]="'Delay flight ' + flight.flightNumber" (click)="openDelayModal(flight, $event)">Delay</button>
+                    <button type="button" class="ghost-btn small-btn" [attr.aria-label]="'View details for flight ' + flight.flightNumber" (click)="openFlightDetails(flight, $event)">Details</button>
+                    <button type="button" class="danger-btn small-btn" [attr.aria-label]="'Cancel flight ' + flight.flightNumber" (click)="cancelFlight(flight.flightId, $event)">Cancel</button>
+                    <button type="button" class="danger-btn small-btn" *ngIf="isAdmin" [attr.aria-label]="'Delete flight ' + flight.flightNumber" (click)="deleteFlight(flight.flightId)">Delete</button>
+                  </td>
+                </tr>
+                <tr *ngIf="!pagedFlights.length"><td colspan="6">No flights found matching your search.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" [disabled]="isPreviousPageDisabled('flights')" (click)="changePage('flights', paginationState.flights.page - 1)">Previous</button>
+              <ng-container *ngFor="let page of getVisiblePaginationPages('flights')">
+                <span class="ghost-btn small-btn" *ngIf="page === '...'" aria-hidden="true">...</span>
+                <button type="button" class="ghost-btn small-btn" *ngIf="page !== '...'" [class.active-page]="page === paginationState.flights.page" (click)="changePage('flights', +page)">{{ page }}</button>
+              </ng-container>
+              <button type="button" class="ghost-btn small-btn" [disabled]="isNextPageDisabled('flights')" (click)="changePage('flights', paginationState.flights.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('flights') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.flights.pageSize" (ngModelChange)="changePageSize('flights', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'schedules'">
+        <article class="table-card wide-card">
+          <div class="panel-head"><div><p class="panel-label">Schedules</p><h3>Departure and arrival timeline</h3></div></div>
+          <div class="table-tools">
+            <div class="search-control">
+              <input type="text" [value]="scheduleSearchTerm" (input)="onScheduleSearchInput($any($event.target).value)" placeholder="Filter by airport code (e.g. DEL, DXB)..." aria-label="Filter schedules by airport code" />
+              <button type="button" class="ghost-btn small-btn" *ngIf="scheduleSearchTerm" (click)="clearScheduleSearch()">Clear</button>
+            </div>
+            <div class="chip-row">
+              <button type="button" class="chip-action" [class.active]="scheduleQuickFilter==='TODAY'" (click)="setScheduleQuickFilter('TODAY')">Today</button>
+              <button type="button" class="chip-action" [class.active]="scheduleQuickFilter==='TOMORROW'" (click)="setScheduleQuickFilter('TOMORROW')">Tomorrow</button>
+              <button type="button" class="chip-action" [class.active]="scheduleQuickFilter==='THIS_WEEK'" (click)="setScheduleQuickFilter('THIS_WEEK')">This Week</button>
+              <button type="button" class="chip-action" [class.active]="scheduleQuickFilter==='ALL'" (click)="setScheduleQuickFilter('ALL')">All</button>
+            </div>
+            <div class="date-row">
+              <label>From <input type="date" [(ngModel)]="scheduleFromDate" (ngModelChange)="onCustomScheduleDateChange()" /></label>
+              <label>To <input type="date" [(ngModel)]="scheduleToDate" (ngModelChange)="onCustomScheduleDateChange()" /></label>
+            </div>
+            <div class="chip-row">
+              <button type="button" class="chip-action" *ngFor="let status of statusChips" [class.active]="scheduleStatusFilter===status" (click)="setScheduleStatusFilter(status)">{{ status }}</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Flight</th>
+                  <th>Route</th>
+                  <th>Departure</th>
+                  <th>Arrival</th>
+                  <th>Delay</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let flight of pagedSchedules">
+                  <td>{{ flight.flightNumber }}</td>
+                  <td>{{ flight.originAirportCode }} -> {{ flight.destinationAirportCode }}</td>
+                  <td>{{ flight.departureTime | date:'medium' }}</td>
+                  <td>{{ flight.arrivalTime | date:'medium' }}</td>
+                  <td [ngClass]="{'delay-amber': flight.status==='DELAYED', 'delay-red': flight.status==='CANCELLED'}">{{ getScheduleDelayText(flight) }}</td>
+                  <td class="popover-cell">
+                    <button type="button" class="status-chip status-button" [ngClass]="statusBadgeClass(flight.status)" [attr.aria-label]="'Update status for flight ' + flight.flightNumber" (click)="toggleScheduleStatusPopover(flight.flightId)">{{ formatBookingStatus(flight.status) }}</button>
+                    <div class="status-popover" *ngIf="scheduleStatusPopoverFlightId === flight.flightId" [attr.data-status-popover-id]="flight.flightId" role="menu" tabindex="0" (keydown)="onStatusPopoverKeydown($event)">
+                      <button type="button" [attr.aria-label]="'Set flight ' + flight.flightNumber + ' status to ON_TIME'" (click)="updateScheduleStatus(flight, 'ON_TIME')">ON_TIME</button>
+                      <button type="button" [attr.aria-label]="'Set flight ' + flight.flightNumber + ' status to DELAYED'" (click)="updateScheduleStatus(flight, 'DELAYED')">DELAYED</button>
+                      <button type="button" [attr.aria-label]="'Set flight ' + flight.flightNumber + ' status to CANCELLED'" (click)="updateScheduleStatus(flight, 'CANCELLED')">CANCELLED</button>
+                    </div>
+                  </td>
+                  <td><button type="button" class="ghost-btn small-btn" [attr.aria-label]="'View details for flight ' + flight.flightNumber" (click)="openFlightDetails(flight, $event)">Details</button></td>
+                </tr>
+                <tr *ngIf="!pagedSchedules.length"><td colspan="7">No schedules found.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('schedules', paginationState.schedules.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('schedules')" [class.active-page]="page === paginationState.schedules.page" (click)="changePage('schedules', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('schedules', paginationState.schedules.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('schedules') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.schedules.pageSize" (ngModelChange)="changePageSize('schedules', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'bookings'">
+        <article class="table-card wide-card">
+          <div class="bookings-kpi-grid">
+            <article class="kpi-card"><p>Total Revenue</p><strong>{{ bookingsRevenueTotal | currency:'INR':'symbol':'1.0-0' }}</strong></article>
+            <article class="kpi-card"><p>Confirmed Bookings</p><strong>{{ confirmedBookingCount }}</strong></article>
+            <article class="kpi-card"><p>Cancelled Bookings</p><strong>{{ cancelledBookingCount }}</strong></article>
+          </div>
+          <div class="panel-head"><div><p class="panel-label">Bookings</p><h3>{{ getSectionTotal('bookings') }} booking records</h3></div></div>
+          <div class="table-tools">
+            <div class="search-control">
+              <input type="text" [value]="bookingSearchTerm" (input)="onBookingSearchInput($any($event.target).value)" placeholder="Search by PNR or Booking ID..." aria-label="Search bookings" />
+              <button type="button" class="ghost-btn small-btn" *ngIf="bookingSearchTerm" (click)="clearBookingSearch()">Clear</button>
+            </div>
+            <div class="tab-row">
+              <button type="button" class="chip-action" [class.active]="bookingStatusTab==='ALL'" (click)="setBookingStatusTab('ALL')">All ({{ bookingTabCount('ALL') }})</button>
+              <button type="button" class="chip-action" [class.active]="bookingStatusTab==='CONFIRMED'" (click)="setBookingStatusTab('CONFIRMED')">Confirmed ({{ bookingTabCount('CONFIRMED') }})</button>
+              <button type="button" class="chip-action" [class.active]="bookingStatusTab==='CANCELLED'" (click)="setBookingStatusTab('CANCELLED')">Cancelled ({{ bookingTabCount('CANCELLED') }})</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th (click)="sortBookingColumn('pnrCode')" class="sortable">PNR</th>
+                  <th>Booking ID</th>
+                  <th>Flight ID</th>
+                  <th (click)="sortBookingColumn('status')" class="sortable">Status</th>
+                  <th (click)="sortBookingColumn('totalFare')" class="sortable">Total Fare</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let booking of pagedBookings">
+                  <tr>
+                    <td>
+                      <button type="button" class="ghost-btn small-btn" (click)="toggleBookingExpand(booking)">
+                        {{ expandedBookingId === (booking['bookingId'] || '') ? '▾' : '▸' }}
+                      </button>
+                    </td>
+                    <td>{{ booking['pnrCode'] || '-' }}</td>
+                    <td>{{ booking['bookingId'] || '-' }}</td>
+                    <td>{{ booking['flightId'] || '-' }}</td>
+                    <td><span class="status-chip" [ngClass]="statusBadgeClass(getRecordStatus(booking, 'PENDING'))">{{ formatBookingStatus(getRecordStatus(booking, 'PENDING')) }}</span></td>
+                    <td>INR {{ booking['totalFare'] || 0 }}</td>
+                    <td>
+                      <button type="button" class="danger-btn small-btn" *ngIf="isRecordStatus(booking, 'CONFIRMED')" [attr.aria-label]="'Cancel booking ' + (booking['pnrCode'] || booking['bookingId'])" (click)="openCancelBookingModal(booking, $event)">Cancel</button>
+                    </td>
+                  </tr>
+                  <tr class="expanded-row" *ngIf="expandedBookingId === (booking['bookingId'] || '')">
+                    <td colspan="7">
+                      <div class="expanded-content">
+                        <p><strong>Route:</strong> {{ getExpandedBookingRoute(booking) }}</p>
+                        <p><strong>Departure:</strong> {{ getExpandedBookingDeparture(booking) }}</p>
+                        <p><strong>Fare:</strong> INR {{ booking['totalFare'] || 0 }}</p>
+                        <p><strong>Passengers:</strong> {{ booking['passengerCount'] || 1 }}</p>
+                        <p><strong>Passenger Summary:</strong> {{ getExpandedBookingPassengerSummary(booking) }}</p>
+                        <p><strong>Booked At:</strong> {{ booking['bookedAt'] || booking['createdAt'] || '-' }}</p>
+                        <p><strong>Status:</strong> {{ booking['status'] || 'PENDING' }}</p>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+                <tr *ngIf="!pagedBookings.length"><td colspan="7">No bookings available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('bookings', paginationState.bookings.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('bookings')" [class.active-page]="page === paginationState.bookings.page" (click)="changePage('bookings', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('bookings', paginationState.bookings.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('bookings') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.bookings.pageSize" (ngModelChange)="changePageSize('bookings', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'passengers'">
+        <article class="table-card wide-card">
+          <div class="panel-head">
+            <div>
+              <p class="panel-label">Passengers</p>
+              <h3>{{ getSectionTotal('passengers') }} passenger records</h3>
+            </div>
+            <button type="button" class="primary-btn small-btn" (click)="exportPassengersCsv()">Export CSV</button>
+          </div>
+
+          <div class="table-tools">
+            <div class="search-control">
+              <input type="text" [value]="passengerSearchTerm" (input)="onPassengerSearchInput($any($event.target).value)" placeholder="Search by name or ticket number..." aria-label="Search passengers" />
+              <button type="button" class="ghost-btn small-btn" *ngIf="passengerSearchTerm" (click)="clearPassengerSearch()">Clear</button>
+            </div>
+            <label>Flight
+              <select [ngModel]="passengerFlightFilter" (ngModelChange)="setPassengerFlightFilter($event)">
+                <option value="ALL">All Flights</option>
+                <option *ngFor="let number of uniquePassengerFlightNumbers" [value]="number">{{ number }}</option>
+              </select>
+            </label>
+            <div class="chip-row">
+              <button type="button" class="chip-action" [class.active]="passengerTypeFilter==='ALL'" (click)="setPassengerTypeFilter('ALL')">ALL</button>
+              <button type="button" class="chip-action" [class.active]="passengerTypeFilter==='ADULT'" (click)="setPassengerTypeFilter('ADULT')">ADULT</button>
+              <button type="button" class="chip-action" [class.active]="passengerTypeFilter==='CHILD'" (click)="setPassengerTypeFilter('CHILD')">CHILD</button>
+              <button type="button" class="chip-action" [class.active]="passengerTypeFilter==='INFANT'" (click)="setPassengerTypeFilter('INFANT')">INFANT</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Seat</th>
+                  <th>Ticket</th>
+                  <th>Passenger Type</th>
+                  <th>Flight</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let passenger of pagedPassengers">
+                  <td>{{ passenger['firstName'] || '' }} {{ passenger['lastName'] || '' }}</td>
+                  <td><span class="seat-badge">{{ passenger['seatNumber'] || 'Pending' }}</span></td>
+                  <td>{{ passenger['ticketNumber'] || 'N/A' }}</td>
+                  <td><span class="type-badge">{{ passenger['passengerType'] || 'ADULT' }}</span></td>
+                  <td>{{ passenger['flightNumber'] || passenger['flightId'] || '-' }}</td>
+                  <td><button type="button" class="ghost-btn small-btn" [attr.aria-label]="'View details for passenger ' + ((passenger['firstName'] || '') + ' ' + (passenger['lastName'] || '')).trim()" (click)="openPassengerDetails(passenger, $event)">View details</button></td>
+                </tr>
+                <tr *ngIf="!pagedPassengers.length"><td colspan="6">No passengers available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('passengers', paginationState.passengers.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('passengers')" [class.active-page]="page === paginationState.passengers.page" (click)="changePage('passengers', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('passengers', paginationState.passengers.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('passengers') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.passengers.pageSize" (ngModelChange)="changePageSize('passengers', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'payments' && isAdmin">
+        <article class="table-card wide-card">
+          <div class="panel-head"><div><p class="panel-label">Payments</p><h3>{{ getSectionTotal('payments') }} payment records</h3></div></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Payment ID</th>
+                  <th>Booking ID</th>
+                  <th>Status</th>
+                  <th>Mode</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let payment of pagedPayments">
+                  <td>{{ payment['paymentId'] || payment['transactionId'] || '-' }}</td>
+                  <td>{{ payment['bookingId'] || '-' }}</td>
+                  <td><span class="status-chip" [ngClass]="statusBadgeClass(getRecordStatus(payment, 'INITIATED'))">{{ formatBookingStatus(getRecordStatus(payment, 'INITIATED')) }}</span></td>
+                  <td>{{ payment['paymentMethod'] || payment['paymentMode'] || '-' }}</td>
+                  <td>INR {{ payment['amount'] || 0 }}</td>
+                </tr>
+                <tr *ngIf="!pagedPayments.length"><td colspan="5">No payments available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('payments', paginationState.payments.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('payments')" [class.active-page]="page === paginationState.payments.page" (click)="changePage('payments', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('payments', paginationState.payments.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('payments') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.payments.pageSize" (ngModelChange)="changePageSize('payments', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'users' && isAdmin">
+        <article class="table-card wide-card">
+          <div class="panel-head"><div><p class="panel-label">Users</p><h3>{{ getSectionTotal('users') }} registered users</h3></div></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of pagedUsers">
+                  <td>{{ user['fullName'] || '-' }}</td>
+                  <td>{{ user['email'] || '-' }}</td>
+                  <td><span class="type-badge">{{ user['role'] || 'PASSENGER' }}</span></td>
+                  <td><span class="status-chip" [ngClass]="statusBadgeClass(isUserActive(user) ? 'ACTIVE' : 'INACTIVE')">{{ isUserActive(user) ? 'Active' : 'Inactive' }}</span></td>
+                </tr>
+                <tr *ngIf="!pagedUsers.length"><td colspan="4">No users available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('users', paginationState.users.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('users')" [class.active-page]="page === paginationState.users.page" (click)="changePage('users', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('users', paginationState.users.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('users') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.users.pageSize" (ngModelChange)="changePageSize('users', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'airlines' && isAdmin">
+        <article class="form-card">
+          <div class="panel-head"><div><p class="panel-label">Airline Editor</p><h3>{{ editingAirlineId ? 'Update airline' : 'Create new airline' }}</h3></div><button type="button" class="ghost-btn" (click)="resetAirlineForm()">Reset</button></div>
+          <form [formGroup]="airlineForm" (ngSubmit)="saveAirline()" class="editor-form">
+            <label>Airline Name<input type="text" formControlName="name" placeholder="SkyBooker Air" /></label>
+            <label>IATA Code<input type="text" formControlName="iataCode" placeholder="SB" maxlength="3" /></label>
+            <label>Country<input type="text" formControlName="country" placeholder="India" /></label>
+            <label class="inline-check"><input type="checkbox" formControlName="active" /><span>Airline is active</span></label>
+            <button type="submit" class="primary-btn" [disabled]="isSaving">{{ isSaving ? 'Saving...' : (editingAirlineId ? 'Update Airline' : 'Create Airline') }}</button>
+          </form>
+        </article>
+        <article class="table-card">
+          <div class="panel-head"><div><p class="panel-label">Airline Catalog</p><h3>{{ getSectionTotal('airlines') }} airlines available</h3></div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>IATA</th><th>Country</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let airline of pagedAirlines">
+                  <td>{{ airline.name }}</td>
+                  <td>{{ airline.iataCode }}</td>
+                  <td>{{ airline.country }}</td>
+                  <td><span class="status-chip" [ngClass]="statusBadgeClass((airline.active ?? airline.isActive) ? 'ACTIVE' : 'INACTIVE')">{{ (airline.active ?? airline.isActive) ? 'Active' : 'Inactive' }}</span></td>
+                  <td class="action-cell"><button type="button" class="ghost-btn small-btn" (click)="editAirline(airline)">Edit</button><button type="button" class="danger-btn small-btn" (click)="deleteAirline(airline.airlineId)">Delete</button></td>
+                </tr>
+                <tr *ngIf="!pagedAirlines.length"><td colspan="5">No airlines available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('airlines', paginationState.airlines.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('airlines')" [class.active-page]="page === paginationState.airlines.page" (click)="changePage('airlines', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('airlines', paginationState.airlines.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('airlines') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.airlines.pageSize" (ngModelChange)="changePageSize('airlines', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+
+      <section class="management-grid" *ngIf="section === 'airports' && isAdmin">
+        <article class="form-card">
+          <div class="panel-head"><div><p class="panel-label">Airport Editor</p><h3>{{ editingAirportId ? 'Update airport' : 'Create new airport' }}</h3></div><button type="button" class="ghost-btn" (click)="resetAirportForm()">Reset</button></div>
+          <form [formGroup]="airportForm" (ngSubmit)="saveAirport()" class="editor-form airport-form">
+            <label>Airport Name<input type="text" formControlName="name" placeholder="Kempegowda International Airport" /></label>
+            <label>IATA Code<input type="text" formControlName="iataCode" placeholder="BLR" maxlength="3" /></label>
+            <label>City<input type="text" formControlName="city" placeholder="Bengaluru" /></label>
+            <label>Country<input type="text" formControlName="country" placeholder="India" /></label>
+            <label>Timezone<input type="text" formControlName="timezone" placeholder="Asia/Kolkata" /></label>
+            <label>Latitude<input type="number" formControlName="latitude" step="0.0001" /></label>
+            <label>Longitude<input type="number" formControlName="longitude" step="0.0001" /></label>
+            <button type="submit" class="primary-btn" [disabled]="isSaving">{{ isSaving ? 'Saving...' : (editingAirportId ? 'Update Airport' : 'Create Airport') }}</button>
+          </form>
+        </article>
+        <article class="table-card">
+          <div class="panel-head"><div><p class="panel-label">Airport Catalog</p><h3>{{ getSectionTotal('airports') }} airports available</h3></div></div>
+          <div class="airport-search-box">
+            <label for="airport-search">Search Airports (Autocomplete)</label>
+            <input id="airport-search" type="text" placeholder="Type city, airport name, or IATA (e.g. DEL)" [(ngModel)]="airportSearchTerm" (input)="searchAirports()" />
+            <p class="state-text" *ngIf="isAirportSearchLoading">Searching airports...</p>
+            <div class="autocomplete-list" *ngIf="airportSearchTerm.trim().length >= 2 && !isAirportSearchLoading">
+              <div class="autocomplete-item" *ngFor="let airport of airportSearchResults | slice:0:6"><strong>{{ airport.name }} ({{ airport.iataCode }})</strong><span>{{ airport.city }}, {{ airport.country }} · {{ airport.timezone }}</span></div>
+              <p class="state-text" *ngIf="!airportSearchResults.length">No airports matched your search.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>IATA</th><th>City</th><th>Timezone</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let airport of pagedAirports"><td>{{ airport.name }}</td><td>{{ airport.iataCode }}</td><td>{{ airport.city }}, {{ airport.country }}</td><td>{{ airport.timezone }}</td><td class="action-cell"><button type="button" class="ghost-btn small-btn" (click)="editAirport(airport)">Edit</button><button type="button" class="danger-btn small-btn" (click)="deleteAirport(airport.airportId)">Delete</button></td></tr>
+                <tr *ngIf="!pagedAirports.length"><td colspan="5">No airports available.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="table-pagination">
+            <div class="pagination-controls">
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('airports', paginationState.airports.page - 1)">Previous</button>
+              <button type="button" class="ghost-btn small-btn" *ngFor="let page of getPaginationPages('airports')" [class.active-page]="page === paginationState.airports.page" (click)="changePage('airports', page)">{{ page }}</button>
+              <button type="button" class="ghost-btn small-btn" (click)="changePage('airports', paginationState.airports.page + 1)">Next</button>
+            </div>
+            <p>{{ getRangeLabel('airports') }}</p>
+            <label>Rows
+              <select [ngModel]="paginationState.airports.pageSize" (ngModelChange)="changePageSize('airports', +$event)">
+                <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+              </select>
+            </label>
+          </footer>
+        </article>
+      </section>
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <section class="overlay" *ngIf="isDelayModalOpen" role="dialog" aria-modal="true" aria-label="Delay flight dialog" (click)="closeDelayModal()" tabindex="0" (keydown.escape)="closeDelayModal()" (keydown)="onOverlayKeydown($event, '.modal-card')">
+    <article class="modal-card" (click)="$event.stopPropagation()" tabindex="-1">
+      <h3>Mark Flight {{ delayTargetFlight?.flightNumber }} as Delayed</h3>
+      <form [formGroup]="flightDelayForm" (ngSubmit)="submitFlightDelay()" class="editor-form compact-form">
+        <label>Delay Reason
+          <select formControlName="delayReason">
+            <option value="">Select reason</option>
+            <option *ngFor="let reason of delayReasons" [value]="reason">{{ reason }}</option>
+          </select>
+        </label>
+        <label>New Estimated Departure
+          <input type="datetime-local" formControlName="newEstimatedDepartureTime" />
+        </label>
+        <label>Internal Notes
+          <textarea rows="3" formControlName="internalNotes" placeholder="Optional notes for operations team..."></textarea>
+        </label>
+        <p class="error-text" *ngIf="flightDelayForm.controls.delayReason.touched && flightDelayForm.controls.delayReason.invalid">Delay reason is required.</p>
+        <p class="error-text" *ngIf="flightDelayForm.controls.newEstimatedDepartureTime.touched && flightDelayForm.controls.newEstimatedDepartureTime.invalid">Estimated departure time is required.</p>
+        <p class="error-text" *ngIf="actionErrorMessage">{{ actionErrorMessage }}</p>
+        <div class="modal-actions">
+          <button type="button" class="ghost-btn" aria-label="Close delay flight dialog" (click)="closeDelayModal()">Go Back</button>
+          <button type="submit" class="primary-btn" aria-label="Confirm delayed status for this flight" [disabled]="isActionRunning">{{ isActionRunning ? 'Please wait...' : 'Confirm Delay' }}</button>
+        </div>
+      </form>
+    </article>
+  </section>
+
+  <section class="overlay" *ngIf="isCancelFlightModalOpen" role="dialog" aria-modal="true" aria-label="Cancel flight dialog" (click)="closeCancelFlightModal()" tabindex="0" (keydown.escape)="closeCancelFlightModal()" (keydown)="onOverlayKeydown($event, '.modal-card')">
+    <article class="modal-card" (click)="$event.stopPropagation()" tabindex="-1">
+      <h3>Cancel Flight {{ cancelFlightTarget?.flightNumber }}?</h3>
+      <p>This will cancel all {{ cancelFlightAffectedBookings }} confirmed bookings on this flight and notify all affected passengers.</p>
+      <p class="error-text" *ngIf="actionErrorMessage">{{ actionErrorMessage }}</p>
+      <div class="modal-actions">
+        <button type="button" class="ghost-btn" aria-label="Close cancel flight dialog" (click)="closeCancelFlightModal()">Go Back</button>
+        <button type="button" class="danger-btn" aria-label="Confirm cancellation for this flight" [disabled]="isActionRunning" (click)="confirmCancelFlight()">{{ isActionRunning ? 'Please wait...' : 'Confirm Cancellation' }}</button>
+      </div>
+    </article>
+  </section>
+
+  <section class="overlay" *ngIf="isCancelBookingModalOpen" role="dialog" aria-modal="true" aria-label="Cancel booking dialog" (click)="closeCancelBookingModal()" tabindex="0" (keydown.escape)="closeCancelBookingModal()" (keydown)="onOverlayKeydown($event, '.modal-card')">
+    <article class="modal-card" (click)="$event.stopPropagation()" tabindex="-1">
+      <h3>Cancel Booking {{ cancelBookingTarget?.['pnrCode'] || cancelBookingTarget?.['bookingId'] }}?</h3>
+      <form [formGroup]="bookingCancelForm" (ngSubmit)="confirmCancelBooking()" class="editor-form compact-form">
+        <label>Cancellation Reason
+          <select formControlName="reason">
+            <option *ngFor="let reason of bookingCancelReasons" [value]="reason">{{ reason }}</option>
+          </select>
+        </label>
+        <p class="error-text" *ngIf="actionErrorMessage">{{ actionErrorMessage }}</p>
+        <div class="modal-actions">
+          <button type="button" class="ghost-btn" aria-label="Close cancel booking dialog" (click)="closeCancelBookingModal()">Go Back</button>
+          <button type="submit" class="danger-btn" aria-label="Confirm cancellation for this booking" [disabled]="isActionRunning">{{ isActionRunning ? 'Please wait...' : 'Confirm Cancellation' }}</button>
+        </div>
+      </form>
+    </article>
+  </section>
+
+  <section class="drawer-backdrop" *ngIf="isFlightDrawerOpen" (click)="clearFlightDetails()"></section>
+  <aside class="detail-drawer" *ngIf="isFlightDrawerOpen" role="dialog" aria-modal="true" aria-label="Flight details panel" tabindex="-1" (keydown.escape)="clearFlightDetails()" (keydown)="onOverlayKeydown($event, '.detail-drawer')">
+    <header><h3>Flight Details</h3><button type="button" class="ghost-btn small-btn" aria-label="Close flight details panel" (click)="clearFlightDetails()">Close</button></header>
+    <div *ngIf="selectedFlight" class="drawer-content">
+      <p><strong>Flight:</strong> {{ selectedFlight.flightNumber }}</p>
+      <p><strong>Route:</strong> {{ selectedFlight.originAirportCode }} -> {{ selectedFlight.destinationAirportCode }}</p>
+      <p><strong>Departure:</strong> {{ selectedFlight.departureTime | date:'medium' }}</p>
+      <p><strong>Arrival:</strong> {{ selectedFlight.arrivalTime | date:'medium' }}</p>
+      <p><strong>Status:</strong> {{ selectedFlight.status }}</p>
+      <div class="drawer-seat-fill">
+        <span>Seat Fill: {{ selectedFlightSeatSummaryPercent }}%</span>
+        <div class="seat-fill-track"><span class="seat-fill-bar" [ngClass]="getFlightLoadClass(selectedFlight)" [style.width.%]="selectedFlightSeatSummaryPercent"></span></div>
+      </div>
+      <h4>Bookings ({{ bookingsForSelectedFlight }})</h4>
+      <div class="drawer-list">
+        <div class="drawer-list-row" *ngFor="let booking of selectedFlightBookings">{{ booking['pnrCode'] || booking['bookingId'] || '-' }} • {{ formatBookingStatus(getRecordStatus(booking, 'PENDING')) }}</div>
+        <p class="state-text" *ngIf="!selectedFlightBookings.length">No booking records found.</p>
+      </div>
+      <h4>Passengers</h4>
+      <div class="drawer-list">
+        <div class="drawer-list-row" *ngFor="let passenger of selectedFlightPassengers">{{ passenger['firstName'] || '' }} {{ passenger['lastName'] || '' }} • Seat {{ passenger['seatNumber'] || 'Pending' }}</div>
+        <p class="state-text" *ngIf="!selectedFlightPassengers.length">No passenger records found.</p>
+      </div>
+    </div>
+  </aside>
+
+  <section class="drawer-backdrop" *ngIf="isPassengerDrawerOpen" (click)="closePassengerDetails()"></section>
+  <aside class="detail-drawer" *ngIf="isPassengerDrawerOpen" role="dialog" aria-modal="true" aria-label="Passenger details panel" tabindex="-1" (keydown.escape)="closePassengerDetails()" (keydown)="onOverlayKeydown($event, '.detail-drawer')">
+    <header><h3>Passenger Details</h3><button type="button" class="ghost-btn small-btn" aria-label="Close passenger details panel" (click)="closePassengerDetails()">Close</button></header>
+    <div *ngIf="selectedPassenger" class="drawer-content">
+      <p><strong>Name:</strong> {{ selectedPassenger['firstName'] || '' }} {{ selectedPassenger['lastName'] || '' }}</p>
+      <p><strong>Type:</strong> {{ selectedPassenger['passengerType'] || 'ADULT' }}</p>
+      <p><strong>Date of Birth:</strong> {{ selectedPassenger['dateOfBirth'] || '—' }}</p>
+      <p><strong>Nationality:</strong> {{ selectedPassenger['nationality'] || '—' }}</p>
+      <p><strong>Seat:</strong> {{ selectedPassenger['seatNumber'] || 'Pending' }}</p>
+      <p><strong>Ticket:</strong> {{ selectedPassenger['ticketNumber'] || 'N/A' }}</p>
+      <p><strong>Flight:</strong> {{ selectedPassenger['flightNumber'] || selectedPassenger['flightId'] || '—' }}</p>
+      <p><strong>Booking ID:</strong> {{ selectedPassenger['bookingId'] || '—' }}</p>
+      <p><strong>Phone:</strong> {{ selectedPassenger['phoneNumber'] || '—' }}</p>
+      <p><strong>Email:</strong> {{ selectedPassenger['email'] || '—' }}</p>
+    </div>
+  </aside>
+</section>

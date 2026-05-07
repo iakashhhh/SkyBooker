@@ -1,0 +1,142 @@
+<section class="journey-page">
+  <div class="page-shell">
+    <header class="hero-card">
+      <p class="eyebrow">Booking Summary</p>
+      <h2>Review selected seats, passengers, and fare</h2>
+      <p>Confirm all trip details before moving to payment.</p>
+    </header>
+
+    <p class="state-text" *ngIf="isLoading">Loading booking details...</p>
+    <p class="error-text state-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="content-grid" *ngIf="booking">
+      <article class="summary-panel">
+        <div class="panel-head">
+          <div>
+            <p class="label">PNR</p>
+            <h3>{{ booking.pnrCode }}</h3>
+          </div>
+          <span class="status-chip" [class.is-confirmed]="isPaymentComplete">{{ booking.status }}</span>
+        </div>
+
+        <div class="meta-grid">
+          <div class="meta-card">
+            <span>Trip Type</span>
+            <strong>{{ booking.tripType === 'ONE_WAY' ? 'One Way' : 'Round Trip' }}</strong>
+          </div>
+          <div class="meta-card">
+            <span>Passengers</span>
+            <strong>{{ passengers.length }}/{{ requiredPassengerCount }}</strong>
+          </div>
+          <div class="meta-card">
+            <span>Payment</span>
+            <strong>{{ payment?.status ?? 'NOT_STARTED' }}</strong>
+          </div>
+        </div>
+
+        <section class="section-block">
+          <div class="section-title-row">
+            <h4>Selected Seats</h4>
+            <span>{{ requiredPassengerCount }} traveller{{ requiredPassengerCount === 1 ? '' : 's' }}</span>
+          </div>
+          <div class="seat-chip-list">
+            <span class="seat-chip" *ngFor="let seatLabel of seatLabels">{{ seatLabel }}</span>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-title-row">
+            <h4>Fare Breakdown</h4>
+            <span>All amounts in INR</span>
+          </div>
+          <div class="fare-row">
+            <span>Base Fare</span>
+            <strong class="fare-value">{{ booking.baseFare | number: '1.0-0' }}</strong>
+          </div>
+          <div class="fare-row">
+            <span>Seat Charges</span>
+            <strong class="fare-value">{{ booking.seatCharge | number: '1.0-0' }}</strong>
+          </div>
+          <div class="fare-row">
+            <span>Baggage Charges</span>
+            <strong class="fare-value">{{ booking.baggageCharge | number: '1.0-0' }}</strong>
+          </div>
+          <div class="fare-row">
+            <span>Meal Charges</span>
+            <strong class="fare-value">{{ booking.mealCharge | number: '1.0-0' }}</strong>
+          </div>
+          <div class="fare-row">
+            <span>Taxes & Fees</span>
+            <strong class="fare-value">{{ booking.taxes | number: '1.0-0' }}</strong>
+          </div>
+          <div class="fare-row">
+            <span>Baggage Selected</span>
+            <strong class="fare-value">{{ booking.luggageKg }} kg</strong>
+          </div>
+          <div class="fare-row" *ngIf="booking.mealPreference">
+            <span>Meal Preference</span>
+            <strong class="fare-value">{{ booking.mealPreference }}</strong>
+          </div>
+          <div class="fare-row total-row">
+            <span>Total Fare</span>
+            <strong class="fare-value">{{ booking.totalFare | number: '1.0-0' }}</strong>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-title-row">
+            <h4>Passengers</h4>
+            <span *ngIf="passengers.length">Saved to passenger service</span>
+          </div>
+          <div class="passenger-list" *ngIf="passengers.length; else noPassengers">
+            <article class="passenger-item" *ngFor="let passenger of passengers">
+              <div>
+                <strong>{{ passenger.title }} {{ passenger.firstName }} {{ passenger.lastName }}</strong>
+                <p>{{ passenger.passengerType }} · {{ passenger.nationality }}</p>
+              </div>
+              <span>{{ passenger.seatNumber || 'Seat pending' }}</span>
+            </article>
+          </div>
+          <ng-template #noPassengers>
+            <p class="muted-text">Passenger details have not been added yet.</p>
+          </ng-template>
+        </section>
+      </article>
+
+      <aside class="progress-panel">
+        <div class="step-card">
+          <p class="label">Progress</p>
+          <div class="step-row is-done">
+            <span>1</span>
+            <div>
+              <strong>Seats Reserved</strong>
+              <p>Your booking shell and PNR are ready.</p>
+            </div>
+          </div>
+          <div class="step-row" [class.is-done]="isPassengerStepComplete">
+            <span>2</span>
+            <div>
+              <strong>Passenger Details</strong>
+              <p>{{ isPassengerStepComplete ? 'Passenger records saved.' : 'Add one traveller per selected seat.' }}</p>
+            </div>
+          </div>
+          <div class="step-row" [class.is-done]="isPaymentComplete">
+            <span>3</span>
+            <div>
+              <strong>Payment</strong>
+              <p>{{ isPaymentComplete ? 'Payment completed and booking confirmed.' : 'Complete checkout to confirm seats.' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <p class="label">Next Action</p>
+          <button type="button" class="cta-button" (click)="continueJourney()" [disabled]="isPaymentComplete">
+            {{ isPassengerStepComplete ? 'Proceed To Payment' : 'Add Passenger Details' }}
+          </button>
+          <button type="button" class="secondary-button" (click)="continueToPassengers()">Passenger Details</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>

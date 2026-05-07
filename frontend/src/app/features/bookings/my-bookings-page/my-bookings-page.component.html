@@ -1,0 +1,78 @@
+<section class="my-bookings-page">
+  <div class="page-shell">
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">My Bookings</p>
+        <h2>Your upcoming and past trips</h2>
+      </div>
+      <div class="filters" *ngIf="!isLoading && bookingTickets.length">
+        <label>
+          Status
+          <select [(ngModel)]="selectedStatus">
+            <option *ngFor="let status of statusFilters" [value]="status">{{ status === 'ALL' ? 'All status' : status }}</option>
+          </select>
+        </label>
+        <label>
+          Month
+          <select [(ngModel)]="selectedMonth">
+            <option *ngFor="let month of monthFilters" [value]="month.value">{{ month.label }}</option>
+          </select>
+        </label>
+        <button type="button" class="ghost-btn" (click)="resetFilters()">Reset</button>
+      </div>
+    </header>
+
+    <p class="state-text" *ngIf="isLoading">Loading bookings...</p>
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <div class="tickets-list" *ngIf="!isLoading && visibleBookingTickets.length">
+      <div class="ticket-row" *ngFor="let item of visibleBookingTickets">
+        <app-ticket-card
+          [booking]="item.booking"
+          [passenger]="item.passengers[0] || null"
+          [passengers]="item.passengers"
+          [flight]="item.flight"
+          [qrValue]="getPublicTicketUrl(item.booking.bookingId)"
+          (ticketClick)="openTicketModal(item.booking, item.passengers, item.flight)">
+        </app-ticket-card>
+        <button type="button" class="remove-btn" (click)="removeBookingFromView(item.booking.bookingId)">Remove</button>
+      </div>
+    </div>
+
+    <article class="empty-card" *ngIf="!isLoading && !visibleBookingTickets.length && !errorMessage">
+      <p>No bookings match this filter.</p>
+      <button type="button" class="ghost-btn" (click)="resetFilters()">Clear filters</button>
+      <a routerLink="/flights/results">Search flights</a>
+    </article>
+  </div>
+</section>
+
+<section class="ticket-modal-backdrop" *ngIf="isTicketModalOpen && selectedBooking" (click)="closeTicketModal()">
+  <article class="ticket-modal" (click)="$event.stopPropagation()">
+    <header class="modal-head">
+      <div>
+        <p class="eyebrow">Ticket</p>
+        <h3>Passenger Ticket</h3>
+      </div>
+      <button type="button" class="close-btn" (click)="closeTicketModal()">Close</button>
+    </header>
+
+    <div class="a4-body" #ticketPrintable>
+      <app-final-ticket
+        [booking]="selectedBooking"
+        [passenger]="selectedPassenger"
+        [passengers]="selectedPassengers"
+        [flight]="selectedFlight"
+        [qrValue]="getPublicTicketUrl(selectedBooking.bookingId)"
+        [mode]="'modal'">
+      </app-final-ticket>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="cta-button" [disabled]="isDownloadingPdf" (click)="downloadTicket(selectedBooking.bookingId)">
+        {{ isDownloadingPdf ? 'Preparing PDF...' : 'Download Ticket PDF' }}
+      </button>
+      <button type="button" class="secondary-button" (click)="closeTicketModal()">Close</button>
+    </footer>
+  </article>
+</section>

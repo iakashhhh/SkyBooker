@@ -1,0 +1,107 @@
+<section class="seat-map-shell card" [class.loading]="loading">
+  <div class="seat-legend">
+    <h3>Seat Legend</h3>
+    <div class="legend-items">
+      <span><i class="seat available"></i>Available</span>
+      <span><i class="seat selected"></i>Selected</span>
+      <span><i class="seat unavailable"></i>Occupied</span>
+      <span><i class="star">★</i>Extra Legroom</span>
+    </div>
+    <div class="fare-bands" *ngIf="classFareBands.length && baseFare > 0">
+      <article *ngFor="let band of classFareBands" class="fare-chip">
+        <strong>{{ seatClassLabels[band.seatClass] }}</strong>
+        <span>x{{ band.multiplier | number: '1.1-2' }}</span>
+        <em>INR {{ band.amount | number: '1.0-0' }}</em>
+      </article>
+    </div>
+  </div>
+
+  <div class="fuselage">
+    <div class="nose"></div>
+    <div class="cabin" [class.loading-state]="loading">
+      <ng-container *ngFor="let section of cabinSections; trackBy: trackSection">
+        <div class="class-badge">{{ seatClassLabels[section.seatClass] }}</div>
+
+        <div class="column-row">
+          <span class="row-label row-label-left"></span>
+
+          <div class="seat-group seat-group-left">
+            <span class="column-label" *ngFor="let col of section.leftLabels">{{ col }}</span>
+          </div>
+
+          <span class="aisle-gap" aria-hidden="true"></span>
+
+          <div class="seat-group seat-group-middle">
+            <span class="column-label" *ngFor="let col of section.middleLabels">{{ col }}</span>
+          </div>
+
+          <span class="aisle-gap" aria-hidden="true"></span>
+
+          <div class="seat-group seat-group-right">
+            <span class="column-label" *ngFor="let col of section.rightLabels">{{ col }}</span>
+          </div>
+
+          <span class="row-label row-label-right"></span>
+        </div>
+
+        <div class="seat-row" [class.first]="section.seatClass === 'FIRST'" [class.business]="section.seatClass === 'BUSINESS'" [class.economy]="section.seatClass === 'ECONOMY'" [class.extra-legroom-row]="row.hasExtraLegroom" *ngFor="let row of section.rows; trackBy: trackRow">
+          <span class="exit-wall exit-wall-left" *ngIf="row.hasExtraLegroom">⎋ Exit</span>
+          <span class="row-label row-label-left">{{ row.rowNumber }}</span>
+
+          <div class="seat-group seat-group-left">
+            <button
+              type="button"
+              *ngFor="let seat of row.leftSeats; trackBy: trackSeat"
+              class="seat"
+              [class.selected]="isSelected(seat)"
+              [class.unavailable]="isUnavailable(seat)"
+              [class.extra-legroom]="seat.hasExtraLegroom"
+              [attr.title]="'INR ' + (getSeatPrice(seat) | number: '1.0-0') + ' • x' + seat.priceMultiplier"
+              (click)="onSeatClick(seat)">
+              <span class="seat-code">{{ seat.column }}</span>
+              <span class="pulse" *ngIf="isSelected(seat)" @selectPulse></span>
+            </button>
+          </div>
+
+          <span class="aisle-gap" aria-hidden="true"></span>
+
+          <div class="seat-group seat-group-middle">
+            <button
+              type="button"
+              *ngFor="let seat of row.middleSeats; trackBy: trackSeat"
+              class="seat"
+              [class.selected]="isSelected(seat)"
+              [class.unavailable]="isUnavailable(seat)"
+              [class.extra-legroom]="seat.hasExtraLegroom"
+              [attr.title]="'INR ' + (getSeatPrice(seat) | number: '1.0-0') + ' • x' + seat.priceMultiplier"
+              (click)="onSeatClick(seat)">
+              <span class="seat-code">{{ seat.column }}</span>
+              <span class="pulse" *ngIf="isSelected(seat)" @selectPulse></span>
+            </button>
+          </div>
+
+          <span class="aisle-gap" aria-hidden="true"></span>
+
+          <div class="seat-group seat-group-right">
+            <button
+              type="button"
+              *ngFor="let seat of row.rightSeats; trackBy: trackSeat"
+              class="seat"
+              [class.selected]="isSelected(seat)"
+              [class.unavailable]="isUnavailable(seat)"
+              [class.extra-legroom]="seat.hasExtraLegroom"
+              [attr.title]="'INR ' + (getSeatPrice(seat) | number: '1.0-0') + ' • x' + seat.priceMultiplier"
+              (click)="onSeatClick(seat)">
+              <span class="seat-code">{{ seat.column }}</span>
+              <span class="pulse" *ngIf="isSelected(seat)" @selectPulse></span>
+            </button>
+          </div>
+
+          <span class="row-label row-label-right">{{ row.rowNumber }}</span>
+          <span class="exit-wall exit-wall-right" *ngIf="row.hasExtraLegroom">Exit ⎋</span>
+        </div>
+      </ng-container>
+    </div>
+    <div class="tail"></div>
+  </div>
+</section>

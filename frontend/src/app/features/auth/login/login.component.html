@@ -1,0 +1,124 @@
+<section class="auth-shell">
+  <div class="auth-backdrop"></div>
+  <div class="auth-layout">
+    <aside class="auth-story">
+      <p class="eyebrow">SkyBooker Access</p>
+      <h1>{{ pageTitle }}</h1>
+      <p class="story-copy">{{ pageDescription }}</p>
+
+      <div class="role-switcher">
+        <button type="button" [class.active]="selectedRole === 'PASSENGER'" (click)="selectRole('PASSENGER')">Passenger</button>
+        <button type="button" [class.active]="selectedRole === 'AIRLINE_STAFF'" (click)="selectRole('AIRLINE_STAFF')">Airline Staff</button>
+      </div>
+
+      <div class="info-strip" *ngIf="isBookingReturn">
+        <strong>Booking saved</strong>
+        <span>Your seat selection is ready to resume right after sign in.</span>
+      </div>
+
+      <div class="benefit-grid">
+        <article>
+          <strong>Journey continuity</strong>
+          <span>No more getting dropped on profile in the middle of checkout.</span>
+        </article>
+        <article>
+          <strong>Real-time access</strong>
+          <span>Trips, payments, and notifications stay in sync with your account.</span>
+        </article>
+        <article>
+          <strong>Operations ready</strong>
+          <span>Admin and airline staff land in the proper workspace after sign in.</span>
+        </article>
+      </div>
+    </aside>
+
+    <section class="auth-card">
+      <p class="card-tag">Welcome back</p>
+      <h2>{{ forgotMode ? 'Reset password' : 'Sign in' }}</h2>
+      <p class="subtitle">{{ forgotMode ? 'Use OTP from email to set a new password.' : 'Use your email and password to continue.' }}</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="!forgotMode">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input id="email" type="email" formControlName="email" placeholder="you@example.com" />
+          <div class="error-text" *ngIf="loginEmailInvalid">
+            Invalid email format.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" type="password" formControlName="password" placeholder="Enter your password" />
+          <div class="error-text" *ngIf="loginPasswordInvalid">
+            Password is required.
+          </div>
+          <div class="validation-rules" *ngIf="shouldShowPasswordRules">
+            <span class="rules-title">Password rules:</span>
+            <span class="rule-chip" *ngFor="let rule of passwordRuleStates" [class.rule-valid]="rule.valid" [class.rule-invalid]="!rule.valid">
+              {{ rule.label }}
+            </span>
+          </div>
+        </div>
+
+        <div class="error-text" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+        <button class="submit-btn" type="submit" [disabled]="isLoading || form.invalid">
+          {{ isLoading ? 'Signing you in...' : 'Continue to SkyBooker' }}
+        </button>
+      </form>
+
+      <form [formGroup]="forgotForm" *ngIf="forgotMode">
+        <div class="form-group">
+          <label for="forgotEmail">Email Address</label>
+          <input id="forgotEmail" type="email" formControlName="email" placeholder="you@example.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="otpCode">OTP</label>
+          <input id="otpCode" type="text" formControlName="otpCode" placeholder="6-digit OTP" maxlength="6" />
+        </div>
+
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input id="newPassword" type="password" formControlName="newPassword" placeholder="8-20 chars, upper/lower/number/symbol" />
+        </div>
+
+        <div class="error-text" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="success-text" *ngIf="forgotMessage">{{ forgotMessage }}</div>
+
+        <div class="forgot-actions">
+          <button class="submit-btn secondary" type="button" (click)="requestPasswordOtp()" [disabled]="isLoading">
+            {{ isLoading ? 'Sending...' : 'Send OTP' }}
+          </button>
+          <button class="submit-btn" type="button" (click)="resetPassword()" [disabled]="isLoading">
+            {{ isLoading ? 'Resetting...' : 'Reset Password' }}
+          </button>
+        </div>
+      </form>
+
+      <button type="button" class="link-btn" (click)="toggleForgotMode()">
+        {{ forgotMode ? 'Back to sign in' : 'Forgot password?' }}
+      </button>
+
+      <div class="divider" *ngIf="!forgotMode">
+        <span>or</span>
+      </div>
+      <div id="google-login-btn" class="google-btn-wrap" *ngIf="!forgotMode && googleAuthConfigured"></div>
+      <button
+        type="button"
+        class="google-fallback-btn"
+        *ngIf="!forgotMode && !googleAuthConfigured"
+        (click)="showGoogleSetupMessage()">
+        Continue with Google
+      </button>
+      <p class="google-hint" *ngIf="!forgotMode && !googleAuthConfigured">
+        Google login setup is pending. Add <code>GOOGLE_CLIENT_ID</code> and rebuild frontend + auth-service.
+      </p>
+
+      <p class="switch-copy">
+        New here?
+        <a [routerLink]="['/auth/register']" [queryParams]="registerQueryParams">Create an account</a>
+      </p>
+    </section>
+  </div>
+</section>

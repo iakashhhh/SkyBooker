@@ -1,0 +1,115 @@
+:root {
+  --page-bg: #f4f8ff;
+  --card-bg: #ffffff;
+  --brand: #1d61ec;
+  --brand-light: #14b8de;
+  --danger: #ae2012;
+  --text: #121e39;
+  --muted: #596a84;
+  --border: #d6e3f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a,
+button,
+.btn,
+input[type='radio'],
+input[type='checkbox'],
+select,
+.clickable,
+[role='button'] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a,
+button,
+.btn,
+input[type='radio'],
+[role='button'],
+.clickable {
+  cursor: pointer;
+}
+
+body {
+  margin: 0;
+  font-family: 'Avenir Next', 'Manrope', 'Segoe UI', sans-serif;
+  background: var(--page-bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--brand-light);
+  transform: scale(1.03);
+  filter: brightness(0.9);
+  box-shadow: 0 14px 26px rgba(19, 87, 205, 0.33);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.form-group {
+  margin-bottom: 0.9rem;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.error-text {
+  color: var(--danger);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.success-text {
+  color: #2b9348;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0.75rem;
+  }
+}

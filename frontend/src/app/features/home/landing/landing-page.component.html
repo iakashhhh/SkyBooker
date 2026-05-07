@@ -1,0 +1,228 @@
+<section class="hero-wrap">
+  <div class="hero-video-layer" aria-hidden="true">
+    <video class="hero-video" autoplay muted loop playsinline preload="auto">
+      <source src="/assets/hero/herovideo.mp4" type="video/mp4" />
+    </video>
+  </div>
+
+  <div class="hero-content page-shell">
+    <h1>Find Your Next Journey,<br /><span>Instantly</span></h1>
+    <p>Compare prices from over 1000 airlines and book your next adventure with confidence.</p>
+
+    <form class="search-card" [formGroup]="form" (ngSubmit)="submitSearch()">
+      <div class="trip-toggle" [class.one-way]="form.controls.tripType.value === 'ONE_WAY'">
+        <div class="trip-pill"></div>
+        <label [class.active]="form.controls.tripType.value === 'ROUND_TRIP'">
+          <input type="radio" formControlName="tripType" value="ROUND_TRIP" />
+          Round Trip
+        </label>
+        <label [class.active]="form.controls.tripType.value === 'ONE_WAY'">
+          <input type="radio" formControlName="tripType" value="ONE_WAY" />
+          One Way
+        </label>
+      </div>
+
+      <div class="date-mode-toggle" [class.flexible]="form.controls.dateMode.value === 'FLEXIBLE'">
+        <div class="date-mode-pill"></div>
+        <label [class.active]="form.controls.dateMode.value === 'EXACT'">
+          <input type="radio" formControlName="dateMode" value="EXACT" />
+          Exact Dates
+        </label>
+        <label [class.active]="form.controls.dateMode.value === 'FLEXIBLE'">
+          <input type="radio" formControlName="dateMode" value="FLEXIBLE" />
+          Flexible Dates
+        </label>
+      </div>
+
+      <div class="search-grid">
+        <label class="field field-input icon-field" [class.focused]="form.controls.originText.touched">
+          <span>From</span>
+          <input
+            formControlName="originText"
+            placeholder="City or Airport"
+            autocomplete="off"
+            (focus)="onCityFocus('originText')"
+            (blur)="onCityBlur('originText')"
+            (input)="onCityInput('originText', $any($event.target).value)" />
+          <div class="city-dropdown" *ngIf="showCityDropdown('originText')">
+            <button
+              type="button"
+              class="city-option"
+              *ngFor="let option of citySuggestions.originText"
+              (mousedown)="selectCity('originText', option); $event.preventDefault()">
+              <strong>{{ option.city }} ({{ option.code }})</strong>
+              <span>{{ option.airport }}</span>
+            </button>
+          </div>
+          <i>◉</i>
+        </label>
+
+        <label class="field field-input icon-field" [class.focused]="form.controls.destinationText.touched">
+          <span>To</span>
+          <input
+            formControlName="destinationText"
+            placeholder="City or Airport"
+            autocomplete="off"
+            (focus)="onCityFocus('destinationText')"
+            (blur)="onCityBlur('destinationText')"
+            (input)="onCityInput('destinationText', $any($event.target).value)" />
+          <div class="city-dropdown" *ngIf="showCityDropdown('destinationText')">
+            <button
+              type="button"
+              class="city-option"
+              *ngFor="let option of citySuggestions.destinationText"
+              (mousedown)="selectCity('destinationText', option); $event.preventDefault()">
+              <strong>{{ option.city }} ({{ option.code }})</strong>
+              <span>{{ option.airport }}</span>
+            </button>
+          </div>
+          <i>◉</i>
+        </label>
+
+        <label class="field field-input" *ngIf="form.controls.dateMode.value === 'EXACT'">
+          <span>Departure</span>
+          <input type="date" formControlName="journeyDate" [attr.min]="todayDate" />
+        </label>
+
+        <label class="field field-input" *ngIf="form.controls.dateMode.value === 'FLEXIBLE'">
+          <span>Departure Month</span>
+          <input type="month" formControlName="journeyMonth" [attr.min]="currentMonth" />
+        </label>
+
+        <label class="field field-input" *ngIf="form.controls.tripType.value === 'ROUND_TRIP' && form.controls.dateMode.value === 'EXACT'">
+          <span>Return</span>
+          <input type="date" formControlName="returnDate" [attr.min]="todayDate" />
+        </label>
+
+        <label class="field field-input" *ngIf="form.controls.tripType.value === 'ROUND_TRIP' && form.controls.dateMode.value === 'FLEXIBLE'">
+          <span>Return Month</span>
+          <input type="month" formControlName="returnMonth" [attr.min]="currentMonth" />
+        </label>
+
+        <label class="field field-input">
+          <span>Passengers</span>
+          <select formControlName="seatClass">
+            <option value="ECONOMY">1 Adult, Economy</option>
+            <option value="PREMIUM_ECONOMY">1 Adult, Premium Economy</option>
+            <option value="BUSINESS">1 Adult, Business</option>
+            <option value="FIRST">1 Adult, First</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="error-text" *ngIf="submitError">{{ submitError }}</p>
+      <button class="search-cta" type="submit">Search Flights <span>→</span></button>
+    </form>
+  </div>
+</section>
+
+<section class="trust-strip">
+  <div class="page-shell trust-grid">
+    <article *ngFor="let stat of trustStats; let i = index">
+      <div class="bubble" #popIcon [class.pop-icon]="i === 1 || i === 2">{{ stat.icon }}</div>
+      <p>{{ stat.label }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="section page-shell" id="support">
+  <h2>Why Choose <span>SkyBooker</span></h2>
+  <p class="section-subtitle">Everything you need for a seamless travel experience</p>
+  <div class="feature-grid">
+    <article class="feature-card" *ngFor="let item of featureItems">
+      <div class="feature-icon">{{ item.icon }}</div>
+      <h3>{{ item.title }}</h3>
+      <p>{{ item.description }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="section page-shell" id="deals">
+  <h2>Popular <span>Destinations</span></h2>
+  <p class="section-subtitle">Explore India's most visited cities</p>
+  <div class="destination-grid">
+    <article class="destination-card reveal-card" #revealCard *ngFor="let d of destinations; let i = index" [style.transitionDelay.s]="i * 0.1">
+      <div class="image-wrap">
+        <img [src]="d.imageUrl" [alt]="d.city" />
+        <div class="image-overlay"></div>
+      </div>
+      <div class="card-body">
+        <h3>{{ d.city }}</h3>
+        <p class="country">{{ d.country }}</p>
+        <div class="card-footer">
+          <div>
+            <small>Starting from</small>
+            <strong>{{ d.price }}</strong>
+          </div>
+          <a class="book-btn" routerLink="/flights/search">Book Now</a>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section page-shell testimonials">
+  <h2>What Our <span>Customers Say</span></h2>
+  <div class="testimonial-grid">
+    <article class="testimonial-card" *ngFor="let t of testimonials">
+      <div class="profile-row">
+        <img [src]="t.avatarUrl" [alt]="t.name" />
+        <div>
+          <h3>{{ t.name }}</h3>
+          <p>{{ t.role }}</p>
+        </div>
+      </div>
+      <p class="stars">★★★★★</p>
+      <blockquote>“{{ t.quote }}”</blockquote>
+    </article>
+  </div>
+</section>
+
+<section class="mobile-section">
+  <div class="page-shell mobile-grid">
+    <div>
+      <p class="tag">Coming Soon</p>
+      <h2>Experience SkyBooker Anywhere</h2>
+      <p>Our mobile app is coming soon with exclusive deals, easy booking management, and real-time flight updates.</p>
+      <ul>
+        <li>Exclusive mobile-only deals</li>
+        <li>Mobile check-in and boarding passes</li>
+        <li>Real-time flight status alerts</li>
+      </ul>
+      <a class="book-btn" routerLink="/auth/register">Notify Me</a>
+    </div>
+    <div class="phone-mockup-wrap">
+      <div class="phone-mockup">
+        <div class="screen-glow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer-dark">
+  <div class="page-shell footer-grid">
+    <div>
+      <h3>SkyBooker</h3>
+      <p>Your trusted partner for finding the best flight deals worldwide.</p>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a href="#">About</a>
+      <a href="#">Careers</a>
+      <a href="#">Blog</a>
+    </div>
+    <div>
+      <h4>Support</h4>
+      <a href="#">Help Center</a>
+      <a href="#">Contact</a>
+      <a href="#">FAQs</a>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Cookie Policy</a>
+    </div>
+  </div>
+  <div class="page-shell footer-bottom">© 2026 SkyBooker. All rights reserved.</div>
+</footer>

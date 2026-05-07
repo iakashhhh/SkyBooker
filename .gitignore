@@ -1,0 +1,76 @@
+# Maven
+**/target/
+
+# IDE files
+.classpath
+.project
+.settings/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Java
+target/
+*.class
+*.jar
+*.log
+
+# Node
+node_modules/
+dist/
+
+# Env
+.env
+
+# IDE
+.idea/
+.vscode/
+.metadata/
+
+# Sonar
+.scannerwork/
+
+# OS
+.DS_Store
+
+# OS
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Node
+node_modules/
+
+# Angular
+.angular/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Maven
+target/
+
+# Env
+.env
+.env.*
+
+# Coverage
+coverage/
+
+# Build
+build/
+
+# Mac
+.AppleDouble
+.LSOverride

@@ -1,0 +1,80 @@
+.seat-page {
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.back-btn {
+  border: none;
+  background: transparent;
+  color: #445a7d;
+  font-weight: 700;
+}
+
+.flight-meta {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.flight-meta strong {
+  font-size: 1.2rem;
+}
+
+.flight-meta span {
+  color: #667b99;
+}
+
+.stepper {
+  display: flex;
+  gap: 0.75rem;
+  font-weight: 700;
+  color: #7f90a8;
+}
+
+.stepper .done {
+  color: #05a35a;
+}
+
+.stepper .active {
+  color: #0052cc;
+}
+
+.layout {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.layout > * {
+  min-width: 0;
+}
+
+.toast {
+  margin-top: 0.8rem;
+  color: #0052cc;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stepper {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

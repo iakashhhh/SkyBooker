@@ -1,0 +1,35 @@
+<article class="ticket-card" role="button" tabindex="0" (click)="openTicket()" (keyup.enter)="openTicket()">
+  <section class="ticket-left">
+    <header class="ticket-head">
+      <div>
+        <p class="airline">{{ airlineName }}</p>
+        <p class="route">{{ departureLabel }} → {{ arrivalLabel }}</p>
+      </div>
+      <div class="status-pill">{{ booking.status }}</div>
+    </header>
+
+    <div class="route-visual">
+      <span class="route-code">{{ departureLabel }}</span>
+      <div class="track"><span>✈</span></div>
+      <span class="route-code">{{ arrivalLabel }}</span>
+    </div>
+
+    <div class="meta-grid">
+      <div><span>Passenger</span><strong>{{ passengerName }}</strong></div>
+      <div><span>Flight</span><strong>{{ flightNumber }}</strong></div>
+      <div><span>Seat</span><strong>{{ seatLabel }}</strong></div>
+      <div><span>Date</span><strong>{{ travelDate }}</strong></div>
+      <div><span>Time</span><strong>{{ departureTime }}</strong></div>
+      <div><span>Fare</span><strong>INR {{ booking.totalFare | number: '1.0-0' }}</strong></div>
+    </div>
+    <p class="passenger-count">{{ passengerCountLabel }}</p>
+  </section>
+
+  <aside class="ticket-right">
+    <p class="vertical-tag">BOARDING PASS</p>
+    <div class="qr-card">
+      <qrcode [qrdata]="qrCodeValue" [width]="104" [errorCorrectionLevel]="'M'"></qrcode>
+    </div>
+    <p class="pnr">PNR {{ booking.pnrCode }}</p>
+  </aside>
+</article>

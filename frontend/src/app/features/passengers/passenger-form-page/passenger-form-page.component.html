@@ -1,0 +1,111 @@
+<section class="passenger-page">
+  <div class="page-shell">
+    <header class="hero-card">
+      <p class="eyebrow">Passenger Step</p>
+      <h2>Add traveller details for every reserved seat</h2>
+      <p>Each traveller is matched to the seat selected in the booking flow so payment can confirm the right inventory.</p>
+    </header>
+
+    <p class="state-text" *ngIf="isLoading">Loading passenger form...</p>
+    <p class="error-text state-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <section class="booking-strip" *ngIf="booking">
+      <article>
+        <span>Booking ID</span>
+        <strong>{{ bookingId }}</strong>
+      </article>
+      <article>
+        <span>PNR</span>
+        <strong>{{ pnr }}</strong>
+      </article>
+      <article>
+        <span>Total Fare</span>
+        <strong>INR {{ amount | number: '1.0-0' }}</strong>
+      </article>
+    </section>
+
+    <form class="passenger-form" [formGroup]="form" (ngSubmit)="submitPassengers()" *ngIf="booking" autocomplete="off">
+      <div class="form-grid" formArrayName="passengers">
+        <article class="passenger-card" *ngFor="let passenger of passengers.controls; let i = index" [formGroupName]="i">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Traveller {{ i + 1 }}</p>
+              <h3>Assigned to {{ seatLabelAt(i) }}</h3>
+              <p class="meal-selected">
+                Meal: {{ selectedMealAt(i)?.name || 'No Meal' }} · INR {{ selectedMealAt(i)?.price ?? 0 | number: '1.0-0' }}
+              </p>
+            </div>
+            <span class="seat-pill">{{ seatLabelAt(i) }}</span>
+          </div>
+
+          <div class="grid">
+            <label>Title
+              <select formControlName="title">
+                <option value="" disabled>Select title</option>
+                <option *ngFor="let title of titleOptions" [value]="title">{{ title }}</option>
+              </select>
+            </label>
+            <label>First Name <input type="text" formControlName="firstName" autocomplete="given-name" /></label>
+            <label>Last Name <input type="text" formControlName="lastName" autocomplete="family-name" /></label>
+            <label>Date of Birth <input type="date" formControlName="dateOfBirth" autocomplete="bday" /></label>
+            <label>Gender
+              <select formControlName="gender">
+                <option value="" disabled>Select gender</option>
+                <option *ngFor="let gender of genderOptions" [value]="gender">{{ gender }}</option>
+              </select>
+            </label>
+            <label>Passenger Type
+              <select formControlName="passengerType">
+                <option [ngValue]="null" disabled>Select passenger type</option>
+                <option *ngFor="let passengerType of passengerTypeOptions" [value]="passengerType.value">
+                  {{ passengerType.label }}
+                </option>
+              </select>
+            </label>
+            <label>Passport No. <input type="text" formControlName="passportNumber" autocomplete="off" /></label>
+            <label>Nationality <input type="text" formControlName="nationality" autocomplete="country-name" /></label>
+            <label>Passport Expiry <input type="date" formControlName="passportExpiry" /></label>
+            <label>Extra Baggage (kg) <input type="number" min="0" max="50" formControlName="extraBaggageKg" /></label>
+          </div>
+
+          <section class="meal-section">
+            <div class="meal-head">
+              <h4>Select Meal</h4>
+            </div>
+            <div class="meal-tabs">
+              <button
+                type="button"
+                class="meal-tab"
+                *ngFor="let tab of mealTabs"
+                [class.active]="activeMealTypeAt(i) === tab.value"
+                (click)="setActiveMealType(i, tab.value)">
+                {{ tab.label }}
+              </button>
+            </div>
+            <div class="meal-slider">
+              <button
+                type="button"
+                class="meal-card"
+                *ngFor="let meal of mealsForPassenger(i)"
+                [class.selected]="isMealSelected(i, meal.id)"
+                (click)="selectMeal(i, meal)">
+                <img [src]="meal.image" [alt]="meal.name" loading="lazy" />
+                <div>
+                  <strong>{{ meal.name }}</strong>
+                  <span>INR {{ meal.price | number: '1.0-0' }}</span>
+                </div>
+              </button>
+            </div>
+          </section>
+        </article>
+      </div>
+
+      <footer class="action-row">
+        <button type="button" class="secondary-button" (click)="backToSeatSelection()">Back To Seat Selection</button>
+        <button type="submit" class="cta-button" [disabled]="isSubmitting || isLoading">Save Passengers And Continue</button>
+      </footer>
+    </form>
+
+    <p class="status" *ngIf="submitMessage">{{ submitMessage }}</p>
+  </div>
+</section>

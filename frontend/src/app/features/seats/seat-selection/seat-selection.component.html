@@ -1,0 +1,35 @@
+<section class="seat-page container">
+  <header class="top-bar card">
+    <button type="button" class="back-btn" (click)="goBack()">← Back to Search</button>
+    <div class="flight-meta">
+      <strong>{{ routeLabel }}</strong>
+      <span>{{ flightNumber }}</span>
+    </div>
+    <div class="stepper">
+      <span class="done">1 Flight Selection</span>
+      <span class="active">2 Seat Selection</span>
+      <span>3 Passenger & Payment</span>
+    </div>
+  </header>
+
+  <p class="toast" *ngIf="toastMessage">{{ toastMessage }}</p>
+  <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="layout">
+    <app-seat-map
+      [seats]="seatMap?.seats ?? []"
+      [baseFare]="baseFare"
+      [selectedSeatIds]="selectedSeatIds"
+      [loading]="isLoading"
+      (seatToggled)="onSeatToggle($event)">
+    </app-seat-map>
+
+    <app-booking-summary
+      [selectedSeats]="selectedSeats"
+      [baseFare]="baseFare"
+      [countdownSeconds]="countdownSeconds"
+      (releaseAll)="releaseAllSeats()"
+      (confirm)="confirmSelection()">
+    </app-booking-summary>
+  </div>
+</section>

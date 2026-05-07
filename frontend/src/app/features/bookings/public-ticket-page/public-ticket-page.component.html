@@ -1,0 +1,23 @@
+<section class="public-ticket-page">
+  <div class="page-shell">
+    <header>
+      <p class="eyebrow">Ticket Verification</p>
+      <h2>Boarding pass details</h2>
+    </header>
+
+    <p class="state-text" *ngIf="isLoading">Loading ticket...</p>
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <app-final-ticket
+      *ngIf="booking"
+      [booking]="booking"
+      [passenger]="passengers[0] || null"
+      [passengers]="passengers"
+      [flight]="flight"
+      [qrValue]="ticketUrl"
+      [mode]="'public'">
+    </app-final-ticket>
+
+    <a routerLink="/" class="home-link">Back to SkyBooker</a>
+  </div>
+</section>

@@ -1,5 +1,7 @@
 package com.skybooker.authservice.dto;
 
+import java.time.LocalDate;
+
 /**
  * This DTO returns user profile information for authenticated users.
  * Sensitive values like password are intentionally not included.
@@ -12,6 +14,8 @@ public class ProfileResponse {
     private String phone;
     private String passportNumber;
     private String nationality;
+    private LocalDate dateOfBirth;
+    private String profilePhotoUrl;
     private String role;
     private String provider;
     private boolean active;
@@ -22,6 +26,8 @@ public class ProfileResponse {
                            String phone,
                            String passportNumber,
                            String nationality,
+                           LocalDate dateOfBirth,
+                           String profilePhotoUrl,
                            String role,
                            String provider,
                            boolean active) {
@@ -31,6 +37,8 @@ public class ProfileResponse {
         this.phone = phone;
         this.passportNumber = passportNumber;
         this.nationality = nationality;
+        this.dateOfBirth = dateOfBirth;
+        this.profilePhotoUrl = profilePhotoUrl;
         this.role = role;
         this.provider = provider;
         this.active = active;
@@ -82,6 +90,22 @@ public class ProfileResponse {
 
     public void setNationality(String nationality) {
         this.nationality = nationality;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 
     public String getRole() {

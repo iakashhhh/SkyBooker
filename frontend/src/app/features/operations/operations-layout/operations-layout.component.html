@@ -1,0 +1,64 @@
+<section class="ops-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+  <button class="mobile-toggle" type="button" (click)="toggleSidebar()">Menu</button>
+  <button
+    class="sidebar-backdrop"
+    type="button"
+    *ngIf="sidebarOpen"
+    (click)="toggleSidebar()"
+    aria-label="Close sidebar"
+  ></button>
+
+  <aside class="ops-sidebar" [class.open]="sidebarOpen" [class.collapsed]="sidebarCollapsed">
+    <div class="sidebar-head">
+      <div>
+        <p class="label">Operations</p>
+        <h2>{{ roleLabel }}</h2>
+      </div>
+      <button class="collapse-toggle" type="button" (click)="toggleSidebarCollapse()" [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a
+        *ngFor="let link of links"
+        [routerLink]="link.route"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: true }"
+        [attr.title]="link.label"
+      >
+        <span class="nav-icon" aria-hidden="true">
+          <svg [ngSwitch]="link.icon" viewBox="0 0 24 24">
+            <path *ngSwitchCase="'dashboard'" d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 3.5h7M16.5 13v7" />
+            <path *ngSwitchCase="'airline'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+            <path *ngSwitchCase="'flight'" d="m3 12 8 2 10-9 1 2-8 9 2 6-4-2-3 2 1-6z" />
+            <path *ngSwitchCase="'airport'" d="M4 12h16M12 4v16M5 5l14 14M19 5 5 19" />
+            <path *ngSwitchCase="'booking'" d="M5 7h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4V9a2 2 0 0 1 2-2zm4 0v10" />
+            <path *ngSwitchCase="'payment'" d="M3 7h18v10H3zM3 11h18M7 15h2" />
+            <path *ngSwitchCase="'users'" d="M7.5 12.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm9 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2.5 19a5 5 0 0 1 10 0M13.5 19a4.5 4.5 0 0 1 9 0" />
+            <path *ngSwitchCase="'schedule'" d="M3 6h18M7 3v6m10-6v6M5 10h14v10H5z" />
+            <path *ngSwitchCase="'passenger'" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />
+            <path *ngSwitchDefault d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </span>
+        <span class="nav-label">{{ link.label }}</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="ops-content">
+    <header class="ops-page-head">
+      <div>
+        <h1>{{ currentPageTitle }}</h1>
+        <p>{{ currentPageSubtitle }}</p>
+      </div>
+      <div class="ops-head-meta">
+        <span class="meta-chip">{{ isAdmin ? 'Admin Workspace' : 'Airline Workspace' }}</span>
+        <span class="meta-chip">Live Operations</span>
+      </div>
+    </header>
+    <router-outlet></router-outlet>
+  </div>
+</section>

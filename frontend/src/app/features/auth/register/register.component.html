@@ -1,0 +1,127 @@
+<section class="auth-shell">
+  <div class="auth-backdrop"></div>
+  <div class="auth-layout">
+    <aside class="auth-story">
+      <p class="eyebrow">Create Access</p>
+      <h1>{{ pageTitle }}</h1>
+      <p class="story-copy">{{ pageDescription }}</p>
+
+      <div class="role-switcher">
+        <button type="button" [class.active]="selectedRole === 'PASSENGER'" (click)="selectRole('PASSENGER')">Passenger</button>
+        <button type="button" [class.active]="selectedRole === 'AIRLINE_STAFF'" (click)="selectRole('AIRLINE_STAFF')">Airline Staff</button>
+      </div>
+
+      <div class="info-strip" *ngIf="isBookingReturn">
+        <strong>Checkout protected</strong>
+        <span>Finish sign up and you will continue from your saved booking step.</span>
+      </div>
+
+      <div class="benefit-grid">
+        <article>
+          <strong>Role-aware access</strong>
+          <span>Passenger and airline staff experiences now branch into the right workspace.</span>
+        </article>
+        <article>
+          <strong>Modern account flow</strong>
+          <span>Sign up no longer ends on a plain profile page unless you choose to visit it.</span>
+        </article>
+        <article>
+          <strong>Checkout continuity</strong>
+          <span>Seat selection and next steps stay connected through authentication.</span>
+        </article>
+      </div>
+    </aside>
+
+    <section class="auth-card">
+      <p class="card-tag">Start here</p>
+      <h2>Create account</h2>
+      <p class="subtitle">Fill in the details below to unlock the right SkyBooker experience.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input id="fullName" formControlName="fullName" placeholder="Akash Sharma" />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" type="email" formControlName="email" placeholder="you@example.com" />
+            <p class="error-text inline-error" *ngIf="emailInvalid">Invalid email format.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" type="password" formControlName="password" placeholder="8-20 chars, upper/lower/number/symbol" />
+            <div class="validation-rules" *ngIf="shouldShowPasswordRules">
+              <span class="rules-title">Password rules:</span>
+              <span class="rule-chip" *ngFor="let rule of passwordRuleStates" [class.rule-valid]="rule.valid" [class.rule-invalid]="!rule.valid">
+                {{ rule.label }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="Re-enter password" />
+            <p class="error-text inline-error" *ngIf="confirmPasswordInvalid">{{ confirmPasswordMessage }}</p>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <input id="phone" formControlName="phone" placeholder="+91 9876543210" />
+          </div>
+
+          <div class="form-group">
+            <label for="passportNumber">Passport Number</label>
+            <input id="passportNumber" formControlName="passportNumber" placeholder="P1234567" />
+          </div>
+
+          <div class="form-group">
+            <label for="nationality">Nationality</label>
+            <input id="nationality" formControlName="nationality" placeholder="Indian" />
+          </div>
+
+          <div class="form-group">
+            <label for="dateOfBirth">Date of Birth</label>
+            <input id="dateOfBirth" type="date" formControlName="dateOfBirth" />
+          </div>
+
+          <div class="form-group" *ngIf="selectedRole === 'AIRLINE_STAFF'">
+            <label for="airlineId">Select Airline</label>
+            <select id="airlineId" formControlName="airlineId">
+              <option value="">Choose airline</option>
+              <option *ngFor="let airline of airlineOptions" [value]="airline.airlineId">{{ airline.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="error-text" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+        <button class="submit-btn" type="submit" [disabled]="isLoading || form.invalid">
+          {{ isLoading ? 'Creating your account...' : 'Create SkyBooker Account' }}
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>or</span>
+      </div>
+      <div id="google-register-btn" class="google-btn-wrap" *ngIf="googleAuthConfigured"></div>
+      <button
+        type="button"
+        class="google-fallback-btn"
+        *ngIf="!googleAuthConfigured"
+        (click)="showGoogleSetupMessage()">
+        Continue with Google
+      </button>
+      <p class="google-hint" *ngIf="!googleAuthConfigured">
+        Google signup setup is pending. Add <code>GOOGLE_CLIENT_ID</code> and rebuild frontend + auth-service.
+      </p>
+
+      <p class="switch-copy">
+        Already have an account?
+        <a [routerLink]="['/auth/login']" [queryParams]="loginQueryParams">Sign in instead</a>
+      </p>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,34 @@
+<section class="payment-failed-page">
+  <div class="page-shell">
+    <header>
+      <p class="eyebrow">Payment Failed</p>
+      <h2>Payment failed or cancelled</h2>
+      <p class="icon" aria-hidden="true">❌</p>
+      <p class="reason">{{ reason }}</p>
+    </header>
+
+    <article class="receipt-card">
+      <div>
+        <span>Payment ID</span>
+        <strong>{{ paymentId || 'NA' }}</strong>
+      </div>
+      <div>
+        <span>Booking ID</span>
+        <strong>{{ bookingReferenceLabel }}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong>{{ displayStatus }}</strong>
+      </div>
+      <div>
+        <span>Amount</span>
+        <strong>INR {{ displayAmount | number: '1.0-0' }}</strong>
+      </div>
+    </article>
+
+    <div class="actions">
+      <button type="button" class="cta-button" (click)="retryPayment()">Retry</button>
+      <button type="button" class="secondary-button" (click)="goToBookings()">Go to bookings</button>
+    </div>
+  </div>
+</section>

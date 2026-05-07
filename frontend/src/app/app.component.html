@@ -1,0 +1,108 @@
+<header class="app-header" [class.ops-header]="isOperationsRoute">
+  <div class="nav-shell" [class.ops-shell]="isOperationsRoute">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M2.7 14.2 21 12l-18.3-2.2 5-6.2h2.5L8.4 9l4.8.6 3.2-3.9h2.2L16.8 10l4.1.5v2.9l-4.1.5 1.8 4.3h-2.2l-3.2-3.9-4.8.6 1.8 5.3H7.7z"/>
+        </svg>
+      </span>
+      <span class="brand-text">SkyBooker</span>
+    </a>
+    <nav class="center-nav" *ngIf="showPublicNav">
+      <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Flights</a>
+      <a routerLink="/pnr-status" routerLinkActive="active-link">Check PNR Status</a>
+      <a *ngIf="isLoggedIn" routerLink="/my-bookings" routerLinkActive="active-link">My Bookings</a>
+      <a routerLink="/" fragment="deals">Deals</a>
+      <a routerLink="/" fragment="support">Support</a>
+    </nav>
+    <nav class="account-nav" *ngIf="!isLoggedIn">
+      <a routerLink="/auth/login" routerLinkActive="active-link">Login</a>
+      <a class="signup-btn" routerLink="/auth/register" routerLinkActive="active-link">Sign Up</a>
+    </nav>
+
+    <div class="notification-wrap" *ngIf="isLoggedIn" (click)="$event.stopPropagation()">
+      <button
+        class="notification-backdrop"
+        *ngIf="isNotificationMenuOpen"
+        type="button"
+        (click)="isNotificationMenuOpen = false"
+        aria-label="Close notifications"
+      ></button>
+
+      <button class="notification-btn" type="button" (click)="toggleNotifications($event)">
+        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M12 2a6 6 0 0 0-6 6v3.6L4.2 14a1.4 1.4 0 0 0 1.1 2.3h13.4a1.4 1.4 0 0 0 1.1-2.3L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.8-2h-5.6a3 3 0 0 0 2.8 2Z"/>
+        </svg>
+        <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </button>
+
+      <section class="notification-menu" *ngIf="isNotificationMenuOpen" aria-label="Notifications panel">
+        <header class="notification-head">
+          <div class="notification-head-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 2a6 6 0 0 0-6 6v3.6L4.2 14a1.4 1.4 0 0 0 1.1 2.3h13.4a1.4 1.4 0 0 0 1.1-2.3L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.8-2h-5.6a3 3 0 0 0 2.8 2Z"/>
+            </svg>
+          </div>
+          <div>
+            <strong>Notifications</strong>
+            <p>{{ unreadSummary }}</p>
+          </div>
+          <button class="notification-close" type="button" (click)="isNotificationMenuOpen = false" aria-label="Close notifications">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18"/>
+            </svg>
+          </button>
+        </header>
+        <div class="notification-list">
+        <article
+          class="notification-item"
+          *ngFor="let notification of notifications | slice:0:6"
+          [class.success-item]="getNotificationVariant(notification) === 'success'"
+          [class.warning-item]="getNotificationVariant(notification) === 'warning'"
+          [class.info-item]="getNotificationVariant(notification) === 'info'"
+          [class.read-item]="notification.read"
+          (click)="markRead(notification.notificationId)">
+          <div class="notification-icon" aria-hidden="true">
+            <svg *ngIf="getNotificationVariant(notification) === 'success'" viewBox="0 0 24 24" focusable="false">
+              <path d="M20 7 9 18l-5-5"/>
+            </svg>
+            <svg *ngIf="getNotificationVariant(notification) === 'warning'" viewBox="0 0 24 24" focusable="false">
+              <path d="M12 8v5m0 4h.01M10.3 3.6 1.8 18.4A1.2 1.2 0 0 0 2.8 20h18.4a1.2 1.2 0 0 0 1-1.6L13.7 3.6a1.2 1.2 0 0 0-3.4 0Z"/>
+            </svg>
+            <svg *ngIf="getNotificationVariant(notification) === 'info'" viewBox="0 0 24 24" focusable="false">
+              <path d="M12 17v-6m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/>
+            </svg>
+          </div>
+          <div class="notification-copy">
+            <h4>{{ getNotificationTitle(notification) }}</h4>
+            <p>{{ notification.message }}</p>
+            <small>{{ getNotificationTimeAgo(notification.createdAt) }}</small>
+          </div>
+          <span class="unread-dot" *ngIf="!notification.read"></span>
+        </article>
+        </div>
+        <p class="empty-note" *ngIf="!notifications.length">No notifications yet.</p>
+      </section>
+    </div>
+
+    <div class="user-menu-wrap" *ngIf="isLoggedIn" (click)="$event.stopPropagation()">
+      <button class="user-badge" type="button" (click)="toggleUserMenu($event)" aria-label="Account">
+        <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+          <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm-7 8.6C5.7 17.9 8.6 16 12 16s6.3 1.9 7 4.6"/>
+        </svg>
+        <span>Account</span>
+      </button>
+      <div class="user-menu" *ngIf="isUserMenuOpen">
+        <p class="role-line">{{ roleLabel }}</p>
+        <button type="button" (click)="goToMyBookings()" *ngIf="isPassengerUser">My Bookings</button>
+        <button type="button" (click)="goToOperations()" *ngIf="isOperationsUser">{{ isAdmin ? 'Admin Dashboard' : 'Airline Dashboard' }}</button>
+        <button type="button" (click)="goToProfile()">Profile</button>
+        <button type="button" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+  <router-outlet></router-outlet>
+</main>

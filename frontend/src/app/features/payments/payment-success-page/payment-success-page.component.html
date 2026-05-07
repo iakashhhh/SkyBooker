@@ -1,0 +1,36 @@
+<section class="payment-success-page">
+  <div class="page-shell">
+    <header>
+      <p class="eyebrow">Payment Success</p>
+      <h2>Payment captured successfully</h2>
+      <p>Your receipt is generated. Continue to booking confirmation to view the ticket.</p>
+    </header>
+
+    <p class="state-text" *ngIf="isLoading">Loading payment receipt...</p>
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <article class="receipt-card" *ngIf="!isLoading && !errorMessage && booking">
+      <div>
+        <span>Payment ID</span>
+        <strong>{{ paymentId || booking.paymentId || 'NA' }}</strong>
+      </div>
+      <div>
+        <span>Booking ID</span>
+        <strong>{{ booking.bookingId }}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong>{{ status }}</strong>
+      </div>
+      <div>
+        <span>Amount Paid</span>
+        <strong>INR {{ booking.totalFare | number: '1.0-0' }}</strong>
+      </div>
+    </article>
+
+    <div class="actions">
+      <button type="button" class="cta-button" *ngIf="booking" (click)="continueToConfirmation()">View Ticket</button>
+      <a routerLink="/my-bookings" class="secondary-button">Go to My Bookings</a>
+    </div>
+  </div>
+</section>

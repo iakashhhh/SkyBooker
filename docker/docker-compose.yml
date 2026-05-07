@@ -1,0 +1,401 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    user: "0:0"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - chown -R rabbitmq:rabbitmq /var/lib/rabbitmq && exec docker-entrypoint.sh rabbitmq-server
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  auth-mysql:
+    image: mysql:8.4
+    container_name: auth-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auth_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - auth_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  flight-mysql:
+    image: mysql:8.4
+    container_name: flight-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flight_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - flight_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  seat-mysql:
+    image: mysql:8.4
+    container_name: seat-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: seat_db
+    ports:
+      - "3309:3306"
+    volumes:
+      - seat_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  booking-mysql:
+    image: mysql:8.4
+    container_name: booking-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: booking_db
+    ports:
+      - "3310:3306"
+    volumes:
+      - booking_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  passenger-mysql:
+    image: mysql:8.4
+    container_name: passenger-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: passenger_db
+    ports:
+      - "3311:3306"
+    volumes:
+      - passenger_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  payment-mysql:
+    image: mysql:8.4
+    container_name: payment-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: payment_db
+    ports:
+      - "3312:3306"
+    volumes:
+      - payment_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  notification-mysql:
+    image: mysql:8.4
+    container_name: notification-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: notification_db
+    ports:
+      - "3313:3306"
+    volumes:
+      - notification_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  airline-airport-mysql:
+    image: mysql:8.4
+    container_name: airline-airport-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: airline_airport_db
+    ports:
+      - "3314:3306"
+    volumes:
+      - airline_airport_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  eureka-server:
+    build:
+      context: ../backend/eureka-server
+    container_name: eureka-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health | grep -q \"UP\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  api-gateway:
+    build:
+      context: ../backend/api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      CORS_ALLOWED_ORIGIN: http://localhost:4200
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q \"UP\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  admin-server:
+    build:
+      context: ../backend/admin-server
+    container_name: admin-server
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      AUTH_SERVICE_BASE_URL: http://api-gateway:8080
+      BOOKING_SERVICE_BASE_URL: http://api-gateway:8080
+      PAYMENT_SERVICE_BASE_URL: http://api-gateway:8080
+      AIRLINE_AIRPORT_SERVICE_BASE_URL: http://api-gateway:8080
+      FLIGHT_SERVICE_BASE_URL: http://api-gateway:8080
+      PASSENGER_SERVICE_BASE_URL: http://api-gateway:8080
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: ../backend/auth-service
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: auth-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: auth_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      auth-mysql:
+        condition: service_healthy
+
+  flight-service:
+    build:
+      context: ../backend/flight-service
+    container_name: flight-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: flight-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: flight_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      flight-mysql:
+        condition: service_healthy
+
+  seat-service:
+    build:
+      context: ../backend/seat-service
+    container_name: seat-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: seat-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: seat_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      seat-mysql:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: ../backend/booking-service
+    container_name: booking-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: booking-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: booking_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      FLIGHT_SERVICE_BASE_URL: http://api-gateway:8080
+      SEAT_SERVICE_BASE_URL: http://api-gateway:8080
+      PAYMENT_SERVICE_BASE_URL: http://api-gateway:8080
+      PAYMENT_INTEGRATION_ENABLED: "true"
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      booking-mysql:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  passenger-service:
+    build:
+      context: ../backend/passenger-service
+    container_name: passenger-service
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: passenger-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: passenger_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      passenger-mysql:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: ../backend/payment-service
+    container_name: payment-service
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    env_file:
+      - ../.env
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: payment-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: payment_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      BOOKING_SERVICE_BASE_URL: http://api-gateway:8080
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      payment-mysql:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ../backend/notification-service
+    container_name: notification-service
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: notification-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: notification_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      notification-mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  airline-airport-service:
+    build:
+      context: ../backend/airline-airport-service
+    container_name: airline-airport-service
+    restart: unless-stopped
+    ports:
+      - "8089:8089"
+    environment:
+      EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+      MYSQL_HOST: airline-airport-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: airline_airport_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      airline-airport-mysql:
+        condition: service_healthy
+
+volumes:
+  rabbitmq_data:
+  auth_mysql_data:
+  flight_mysql_data:
+  seat_mysql_data:
+  booking_mysql_data:
+  passenger_mysql_data:
+  payment_mysql_data:
+  notification_mysql_data:
+  airline_airport_mysql_data:

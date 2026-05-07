@@ -3,6 +3,8 @@ package com.skybooker.authservice.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+import java.time.LocalDate;
+
 /**
  * This DTO is used to update profile details of authenticated users.
  * Regex validations are added to enforce clean and predictable data.
@@ -24,6 +26,10 @@ public class UpdateProfileRequest {
     @NotBlank(message = "Nationality is required")
     @Pattern(regexp = "^[A-Za-z ]{2,60}$", message = "Nationality format is invalid")
     private String nationality;
+
+    private LocalDate dateOfBirth;
+
+    private String profilePhotoUrl;
 
     public String getFullName() {
         return fullName;
@@ -55,5 +61,21 @@ public class UpdateProfileRequest {
 
     public void setNationality(String nationality) {
         this.nationality = nationality;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 }

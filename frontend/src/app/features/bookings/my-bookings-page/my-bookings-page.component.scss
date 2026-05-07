@@ -1,0 +1,216 @@
+.my-bookings-page {
+  min-height: calc(100vh - 74px);
+  padding: 1.8rem 1rem 2.5rem;
+  background: linear-gradient(180deg, #f2f8ff 0%, #ffffff 65%);
+}
+
+.page-shell {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #1c77b8;
+  font-weight: 700;
+  margin: 0;
+}
+
+h2 {
+  margin: 0.3rem 0 1rem;
+}
+
+.filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.filters label {
+  display: grid;
+  gap: 0.35rem;
+  color: #4f6280;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.filters select {
+  min-width: 150px;
+  border: 1px solid #cddff2;
+  border-radius: 10px;
+  min-height: 40px;
+  padding: 0 0.65rem;
+  background: #fff;
+}
+
+.tickets-list {
+  display: grid;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.ticket-row {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.remove-btn {
+  justify-self: end;
+  border: 1px solid #c6d8ee;
+  border-radius: 10px;
+  background: #f7fbff;
+  color: #1f4f80;
+  padding: 0.48rem 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.state-text {
+  color: #5a6f8b;
+  margin: 0;
+}
+
+.empty-card {
+  border: 1px dashed #bdd5ea;
+  border-radius: 14px;
+  padding: 1.1rem;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+}
+
+.error-text {
+  color: #a3303d;
+}
+
+.ghost-btn {
+  border: 1px solid #d0e0f0;
+  border-radius: 10px;
+  background: #f7fbff;
+  color: #1f4f80;
+  padding: 0.5rem 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ticket-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 30, 57, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 1200;
+}
+
+.ticket-modal {
+  width: min(840px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 20px;
+  border: 1px solid #d8e6f6;
+  background: #fff;
+  box-shadow: 0 20px 50px rgba(10, 33, 64, 0.24);
+  padding: 1rem 1rem 1.1rem;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: flex-start;
+  border-bottom: 1px solid #e5eef8;
+  padding-bottom: 0.8rem;
+}
+
+.modal-head h3 {
+  margin: 0.2rem 0 0;
+}
+
+.close-btn {
+  border: none;
+  border-radius: 10px;
+  background: #edf4ff;
+  color: #234a7d;
+  padding: 0.55rem 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.a4-body {
+  margin-top: 0.9rem;
+}
+
+.modal-actions {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.cta-button,
+.secondary-button {
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  font-weight: 700;
+}
+
+.cta-button {
+  color: #fff;
+  background: linear-gradient(90deg, #1e62ed, #129fd0);
+  cursor: pointer;
+}
+
+.cta-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: #edf4ff;
+  color: #1d4c99;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .page-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .modal-actions {
+    display: grid;
+  }
+}
+
+@media (max-width: 560px) {
+  .modal-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .filters {
+    width: 100%;
+  }
+
+  .filters label,
+  .filters select {
+    width: 100%;
+  }
+}

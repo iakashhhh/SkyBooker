@@ -1,0 +1,48 @@
+<aside class="summary-shell">
+  <div class="timer-card">
+    <p>Hold Timer</p>
+    <strong>{{ countdownText }}</strong>
+  </div>
+
+  <div class="card summary-card">
+    <h3>Booking Summary</h3>
+
+    <section class="selected-seats-panel">
+      <h4>Selected Seats</h4>
+      <div class="selected-seats-list">
+        <ng-container *ngIf="selectedSeats.length; else noSeats">
+          <article class="selected-seat" *ngFor="let seat of selectedSeats">
+            <div>
+              <strong>Seat {{ seat.seatNumber }}</strong>
+              <p>{{ seat.seatClass }} Class{{ seat.hasExtraLegroom ? ' · Extra Legroom' : '' }}</p>
+            </div>
+          </article>
+        </ng-container>
+        <ng-template #noSeats>
+          <p class="empty">No seats selected</p>
+        </ng-template>
+      </div>
+    </section>
+
+    <section class="price-breakdown">
+      <h4>Estimated Fare Preview</h4>
+      <div>
+        <span>Base Fare:</span>
+        <strong>INR {{ baseFareAmount | number: '1.0-0' }}</strong>
+      </div>
+      <div>
+        <span>Seat Charges:</span>
+        <strong>INR {{ seatCharges | number: '1.0-0' }}</strong>
+      </div>
+      <div class="total">
+        <span>Estimated Fare (excl. taxes & baggage):</span>
+        <strong>INR {{ estimatedFare | number: '1.0-0' }}</strong>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" class="btn btn-secondary" (click)="releaseAll.emit()" [disabled]="!selectedSeats.length">Release</button>
+      <button type="button" class="btn btn-primary" (click)="confirm.emit()" [disabled]="!selectedSeats.length">Confirm & Pay</button>
+    </div>
+  </div>
+</aside>

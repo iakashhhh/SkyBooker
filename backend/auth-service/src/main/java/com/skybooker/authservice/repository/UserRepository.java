@@ -13,16 +13,21 @@ import java.util.Optional;
  */
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    
-     // Finds a user by email for login and JWT authentication. 
+    /**
+     * Finds a user by email for login and JWT authentication.
+     */
     Optional<User> findByEmail(String email);
 
-    
-     // Checks whether an email is already registered.
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    /**
+     * Checks whether an email is already registered.
+     */
     boolean existsByEmail(String email);
 
-    
-     // Checks whether a passport number is already registered.   
+    /**
+     * Checks whether a passport number is already registered.
+     */
     boolean existsByPassportNumber(String passportNumber);
 
     /**

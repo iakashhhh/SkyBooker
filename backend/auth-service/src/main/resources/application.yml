@@ -8,6 +8,17 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:auth_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:root}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,13 +32,17 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui
-
 jwt:
   secret: ${JWT_SECRET:U2t5Qm9va2VySnd0U2VjcmV0S2V5U2t5Qm9va2VySnd0U2VjcmV0S2V5MTIzNDU2Nzg5MA==}
   expiration-ms: 86400000
+
+auth:
+  upstream:
+    airline-airport-base-url: ${AIRLINE_AIRPORT_SERVICE_BASE_URL:http://localhost:8080}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+  password-reset:
+    expiry-minutes: ${PASSWORD_RESET_EXPIRY_MINUTES:15}
 
 management:
   endpoints:

@@ -1,11 +1,14 @@
 package com.skybooker.authservice.dto;
 
 import com.skybooker.authservice.entity.UserRole;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
 
 /**
  * This DTO captures all fields required for user registration.
@@ -44,6 +47,13 @@ public class RegisterRequest {
 
     @NotNull(message = "Role is required")
     private UserRole role;
+
+    private Long airlineId;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dateOfBirth;
+
+    private String profilePhotoUrl;
 
     public String getFullName() {
         return fullName;
@@ -99,5 +109,29 @@ public class RegisterRequest {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public Long getAirlineId() {
+        return airlineId;
+    }
+
+    public void setAirlineId(Long airlineId) {
+        this.airlineId = airlineId;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
     }
 }

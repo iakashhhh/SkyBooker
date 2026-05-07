@@ -1,0 +1,361 @@
+.auth-shell {
+  position: relative;
+  min-height: calc(100vh - 74px);
+  overflow: hidden;
+  padding: 2.4rem 1rem 3rem;
+  background:
+    radial-gradient(circle at top left, rgba(30, 97, 236, 0.2), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(20, 184, 222, 0.22), transparent 24%),
+    linear-gradient(180deg, #edf6ff 0%, #f7fbff 45%, #ffffff 100%);
+}
+
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(10, 29, 68, 0.03), rgba(10, 29, 68, 0)),
+    repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.2) 0 14px, rgba(255, 255, 255, 0) 14px 28px);
+  pointer-events: none;
+}
+
+.auth-layout {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.auth-story,
+.auth-card {
+  border: 1px solid rgba(214, 227, 242, 0.85);
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 26px 60px rgba(17, 38, 78, 0.09);
+}
+
+.auth-story {
+  padding: 2.3rem;
+  background:
+    radial-gradient(circle at top right, rgba(31, 97, 241, 0.16), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 251, 255, 0.96));
+}
+
+.eyebrow,
+.card-tag {
+  margin: 0 0 0.55rem;
+  color: #0f7dc1;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+h1,
+h2 {
+  margin: 0;
+  color: #0e1b36;
+  letter-spacing: -0.03em;
+}
+
+h1 {
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 0.98;
+  max-width: 11ch;
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+
+.story-copy,
+.subtitle,
+.switch-copy {
+  color: #5c6e88;
+  line-height: 1.6;
+}
+
+.story-copy {
+  max-width: 58ch;
+  margin: 1rem 0 1.4rem;
+}
+
+.subtitle {
+  margin: 0.65rem 0 1.4rem;
+}
+
+.role-switcher {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: #ebf4ff;
+  border: 1px solid #d6e4f4;
+}
+
+.role-switcher button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.72rem 1.1rem;
+  font-weight: 700;
+  color: #28425f;
+  background: transparent;
+}
+
+.role-switcher button.active {
+  color: #fff;
+  background: linear-gradient(90deg, #154fc7, #1599d6);
+  box-shadow: 0 14px 24px rgba(20, 88, 208, 0.28);
+}
+
+.info-strip {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  border: 1px solid #cfe4fb;
+  background: linear-gradient(90deg, rgba(17, 98, 219, 0.08), rgba(20, 184, 222, 0.12));
+}
+
+.info-strip strong {
+  color: #103b81;
+}
+
+.info-strip span {
+  color: #4f6280;
+}
+
+.benefit-grid {
+  margin-top: 1.4rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.benefit-grid article {
+  padding: 1rem 1.05rem;
+  border-radius: 18px;
+  border: 1px solid #dbe7f5;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.benefit-grid strong {
+  display: block;
+  color: #132849;
+  margin-bottom: 0.3rem;
+}
+
+.benefit-grid span {
+  color: #5f728c;
+}
+
+.auth-card {
+  padding: 2.1rem;
+  align-self: center;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: #173253;
+  font-weight: 700;
+}
+
+input,
+select {
+  min-height: 54px;
+  border-radius: 16px;
+  border: 1px solid #d5e3f2;
+  background: #fbfdff;
+  padding: 0.9rem 1rem;
+  color: #173253;
+  font-weight: 600;
+  color-scheme: light;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #1d62ec;
+  box-shadow: 0 0 0 4px rgba(29, 98, 236, 0.12);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #1e5ec8 50%),
+    linear-gradient(135deg, #1e5ec8 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 4px),
+    calc(100% - 12px) calc(50% - 4px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2.2rem;
+}
+
+select option {
+  background: #ffffff;
+  color: #173253;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 1.15rem;
+  border: none;
+  border-radius: 18px;
+  padding: 1rem 1.2rem;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  background: linear-gradient(90deg, #1655d4, #17a9db);
+  box-shadow: 0 18px 30px rgba(20, 88, 208, 0.28);
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 36px rgba(20, 88, 208, 0.32);
+}
+
+.submit-btn:disabled {
+  opacity: 0.72;
+  cursor: progress;
+  transform: none;
+  box-shadow: none;
+}
+
+.divider {
+  margin: 1rem 0 0.8rem;
+  text-align: center;
+  border-top: 1px solid #dce8f6;
+  position: relative;
+}
+
+.divider span {
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0 0.6rem;
+  color: #5f728c;
+  position: relative;
+  top: -0.72rem;
+}
+
+.google-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.6rem;
+}
+
+.google-fallback-btn {
+  width: 100%;
+  border: 1px solid #d3e2f5;
+  border-radius: 14px;
+  min-height: 50px;
+  font-weight: 700;
+  color: #1a3358;
+  background: #f8fbff;
+  margin-bottom: 0.45rem;
+}
+
+.google-hint {
+  margin: 0.1rem 0 0.8rem;
+  color: #5f728c;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.inline-error {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+}
+
+.validation-rules {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.rules-title {
+  color: #5f728c;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.rule-chip {
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.rule-valid {
+  color: #0b7e4a;
+  background: #ebfbf2;
+  border-color: #bde8cd;
+}
+
+.rule-invalid {
+  color: #bf3d3d;
+  background: #fff2f2;
+  border-color: #f0c7c7;
+}
+
+.switch-copy {
+  margin: 1.15rem 0 0;
+  text-align: center;
+}
+
+.switch-copy a {
+  font-weight: 800;
+}
+
+@media (max-width: 940px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    max-width: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .auth-shell {
+    padding-inline: 0.75rem;
+  }
+
+  .auth-story,
+  .auth-card {
+    padding: 1.4rem;
+    border-radius: 24px;
+  }
+
+  .role-switcher {
+    display: grid;
+    width: 100%;
+  }
+}

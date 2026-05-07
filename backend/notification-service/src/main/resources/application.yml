@@ -1,0 +1,83 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3313}/${MYSQL_DB:notification_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+          connectiontimeout: ${MAIL_SMTP_CONNECTION_TIMEOUT:5000}
+          timeout: ${MAIL_SMTP_TIMEOUT:5000}
+          writetimeout: ${MAIL_SMTP_WRITE_TIMEOUT:5000}
+
+notification:
+  integration:
+    booking-base-url: ${BOOKING_SERVICE_BASE_URL:http://localhost:8080}
+    auth-base-url: ${AUTH_SERVICE_BASE_URL:http://localhost:8080}
+    flight-base-url: ${FLIGHT_SERVICE_BASE_URL:http://localhost:8080}
+  exchange: ${NOTIFICATION_EVENT_EXCHANGE:skybooker.events}
+  queues:
+    booking-confirmed: ${NOTIFICATION_QUEUE_BOOKING_CONFIRMED:notification.booking.confirmed.queue}
+    payment-success: ${NOTIFICATION_QUEUE_PAYMENT_SUCCESS:notification.payment.success.queue}
+    payment-failed: ${NOTIFICATION_QUEUE_PAYMENT_FAILED:notification.payment.failed.queue}
+    flight-updated: ${NOTIFICATION_QUEUE_FLIGHT_UPDATED:notification.flight.updated.queue}
+    flight-delayed: ${NOTIFICATION_QUEUE_FLIGHT_DELAYED:notification.flight.delayed.queue}
+    flight-cancelled: ${NOTIFICATION_QUEUE_FLIGHT_CANCELLED:notification.flight.cancelled.queue}
+    booking-cancelled: ${NOTIFICATION_QUEUE_BOOKING_CANCELLED:notification.booking.cancelled.queue}
+    checkin-reminder: ${NOTIFICATION_QUEUE_CHECKIN_REMINDER:notification.checkin.reminder.queue}
+    boarding-reminder: ${NOTIFICATION_QUEUE_BOARDING_REMINDER:notification.boarding.reminder.queue}
+  routing:
+    booking-confirmed: ${NOTIFICATION_ROUTING_BOOKING_CONFIRMED:booking.confirmed}
+    payment-success: ${NOTIFICATION_ROUTING_PAYMENT_SUCCESS:payment.success}
+    payment-failed: ${NOTIFICATION_ROUTING_PAYMENT_FAILED:payment.failed}
+    flight-updated: ${NOTIFICATION_ROUTING_FLIGHT_UPDATED:flight.updated}
+    flight-delayed: ${NOTIFICATION_ROUTING_FLIGHT_DELAYED:flight.delayed}
+    flight-cancelled: ${NOTIFICATION_ROUTING_FLIGHT_CANCELLED:flight.cancelled}
+    booking-cancelled: ${NOTIFICATION_ROUTING_BOOKING_CANCELLED:booking.cancelled}
+    checkin-reminder: ${NOTIFICATION_ROUTING_CHECKIN_REMINDER:checkin.reminder}
+    boarding-reminder: ${NOTIFICATION_ROUTING_BOARDING_REMINDER:boarding.reminder}
+  delivery:
+    email:
+      from: ${NOTIFICATION_EMAIL_FROM:noreply@skybooker.com}
+      fallback-domain: ${NOTIFICATION_EMAIL_FALLBACK_DOMAIN:skybooker.local}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

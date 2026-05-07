@@ -1,0 +1,337 @@
+<section class="profile-page" *ngIf="profile; else errorBlock">
+  <div class="profile-shell">
+    <header class="profile-heading">
+      <h1>My Profile</h1>
+      <p>Manage your account and view your travel history</p>
+    </header>
+
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="success-text" *ngIf="statusMessage">{{ statusMessage }}</p>
+
+    <ng-container *ngIf="!isEditMode; else editModeBlock">
+      <section class="profile-layout">
+        <article class="panel profile-card">
+          <div class="avatar-shell">
+            <div class="avatar-ring">
+              <img *ngIf="profileForm.controls.profilePhotoUrl.value" [src]="profileForm.controls.profilePhotoUrl.value" alt="Profile photo" />
+              <span *ngIf="!profileForm.controls.profilePhotoUrl.value">{{ profile.fullName.charAt(0) }}</span>
+            </div>
+          </div>
+
+          <h2>{{ profile.fullName }}</h2>
+          <p class="profile-subtitle">{{ profileSubtitle }}</p>
+
+          <div class="identity-list">
+            <div class="identity-row">
+              <span class="identity-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 7l8 6 8-6"/></svg>
+              </span>
+              <div>
+                <small>Email</small>
+                <strong>{{ profile.email }}</strong>
+              </div>
+            </div>
+
+            <div class="identity-row">
+              <span class="identity-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 3h4l2 5-2 2a14 14 0 0 0 4 4l2-2 5 2v4c0 1-1 2-2 2A17 17 0 0 1 4 5c0-1 1-2 2-2"/></svg>
+              </span>
+              <div>
+                <small>Phone</small>
+                <strong>{{ profile.phone }}</strong>
+              </div>
+            </div>
+
+            <div class="identity-row">
+              <span class="identity-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18M6 3v6m12-6v6M5 10h14v11H5z"/></svg>
+              </span>
+              <div>
+                <small>Date of Birth</small>
+                <strong>{{ profile.dateOfBirth || 'Not set' }}</strong>
+              </div>
+            </div>
+
+            <div class="identity-row">
+              <span class="identity-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5.2 3.4 10 8 11 4.6-1 8-5.8 8-11V5z"/></svg>
+              </span>
+              <div>
+                <small>Passport Number</small>
+                <strong>{{ profile.passportNumber }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary wide" type="button" (click)="toggleEditMode()">
+            Edit Profile
+          </button>
+        </article>
+
+        <div class="right-stack">
+          <ng-container *ngIf="isPassenger">
+            <section class="stats-grid">
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-blue" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 11h18M6 5h12M8 19h8"/></svg>
+                </span>
+                <h3>{{ totalBookings }}</h3>
+                <p>Total Bookings</p>
+              </article>
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-purple" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a7 7 0 0 1 14 0c0 5.6-7 10-7 10zm0-7a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+                </span>
+                <h3>{{ countriesVisited }}</h3>
+                <p>Countries Visited</p>
+              </article>
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-orange" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 12h10l3-3m0 0 5-5m-5 5v10"/></svg>
+                </span>
+                <h3>{{ milesTraveled | number }}K</h3>
+                <p>Miles Traveled</p>
+              </article>
+            </section>
+
+            <section class="panel section-card">
+              <div class="section-head">
+                <h3>Recent Bookings</h3>
+                <button class="link-btn" type="button" (click)="openMyBookings()">View All</button>
+              </div>
+
+              <div class="section-list" *ngIf="visibleBookings.length; else noBookings">
+                <article class="row-card" *ngFor="let entry of visibleBookings">
+                  <span class="row-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m3 12 7 1 10-8 1 2-8 10 1 7-3-2-3 2 1-7z"/></svg>
+                  </span>
+                  <div class="row-copy">
+                    <strong>{{ formatBookingRoute(entry) }}</strong>
+                    <span>{{ formatBookingDate(entry.booking.bookedAt) }}</span>
+                  </div>
+                  <span class="status-badge" [ngClass]="bookingStateClass(entry.booking.status)">
+                    {{ bookingStateLabel(entry.booking.status) }}
+                  </span>
+                </article>
+              </div>
+              <ng-template #noBookings>
+                <p class="empty-text">No recent bookings available.</p>
+              </ng-template>
+            </section>
+
+            <section class="panel section-card">
+              <h3>Saved Payment Methods</h3>
+              <div class="payment-strip" *ngIf="hasPaymentPreview; else noPaymentMethod">
+                <div class="strip-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 7h18v10H3zM3 11h18"/></svg>
+                </div>
+                <div class="strip-number">{{ savedPaymentPreview }}</div>
+                <div class="strip-brand">VISA</div>
+              </div>
+              <ng-template #noPaymentMethod>
+                <p class="empty-text">No saved method available.</p>
+              </ng-template>
+            </section>
+          </ng-container>
+
+          <ng-container *ngIf="isAdmin">
+            <section class="stats-grid">
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-blue" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 20h16M7 20V8m5 12V4m5 16v-9"/></svg>
+                </span>
+                <h3>ADMIN</h3>
+                <p>Role</p>
+              </article>
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-purple" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5.2 3.4 10 8 11 4.6-1 8-5.8 8-11V5z"/></svg>
+                </span>
+                <h3>Full Access</h3>
+                <p>Access Level</p>
+              </article>
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-orange" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 12h18M6 6h12M6 18h12"/></svg>
+                </span>
+                <h3>{{ managedAirlinesCount }}</h3>
+                <p>Managed Airlines</p>
+              </article>
+            </section>
+
+            <section class="panel section-card">
+              <h3>Recent Activity</h3>
+              <div class="section-list">
+                <article class="row-card" *ngFor="let item of roleActivities">
+                  <span class="row-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </span>
+                  <div class="row-copy">
+                    <strong>{{ item.title }}</strong>
+                    <span>{{ item.time }}</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel section-card">
+              <h3>Account Permissions</h3>
+              <div class="tags-wrap">
+                <span class="perm-tag">Can Manage Users</span>
+                <span class="perm-tag">Can Manage Flights</span>
+                <span class="perm-tag">Can Manage Airlines</span>
+              </div>
+            </section>
+          </ng-container>
+
+          <ng-container *ngIf="isAirlineStaff">
+            <section class="stats-grid">
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-blue" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 20h16M7 20V8m5 12V4m5 16v-9"/></svg>
+                </span>
+                <h3>STAFF</h3>
+                <p>Role</p>
+              </article>
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-purple" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 12h18M6 6h12M6 18h12"/></svg>
+                </span>
+                <h3>{{ staffAssignedFlights }}</h3>
+                <p>Assigned Flights</p>
+              </article>
+              <article class="panel stat-card">
+                <span class="stat-icon gradient-orange" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3a7 7 0 0 1 7 7c0 5-7 11-7 11S5 15 5 10a7 7 0 0 1 7-7"/></svg>
+                </span>
+                <h3>{{ staffDepartment }}</h3>
+                <p>Department</p>
+              </article>
+            </section>
+
+            <section class="panel section-card">
+              <h3>Assigned Tasks</h3>
+              <div class="section-list">
+                <article class="row-card" *ngFor="let item of roleActivities">
+                  <span class="row-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </span>
+                  <div class="row-copy">
+                    <strong>{{ item.title }}</strong>
+                    <span>{{ item.time }}</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel section-card">
+              <h3>Shift & Assignment</h3>
+              <div class="tags-wrap">
+                <span class="perm-tag">Shift: 09:00 AM - 06:00 PM</span>
+                <span class="perm-tag">Assigned Airport: {{ staffAirport }}</span>
+                <span class="perm-tag">Supervisor: {{ staffSupervisor }}</span>
+              </div>
+            </section>
+          </ng-container>
+        </div>
+      </section>
+    </ng-container>
+
+    <ng-template #editModeBlock>
+      <section class="edit-layout">
+        <article class="panel edit-card">
+          <div class="section-head inline">
+            <h3>Edit Profile</h3>
+            <button class="btn btn-ghost" type="button" (click)="toggleEditMode()">Close</button>
+          </div>
+
+          <form class="form-grid" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+            <label>
+              <span class="field-label">Full Name</span>
+              <input type="text" formControlName="fullName" />
+            </label>
+            <label>
+              <span class="field-label">Email</span>
+              <input type="email" [value]="profile.email" readonly />
+            </label>
+            <label>
+              <span class="field-label">Phone</span>
+              <input type="text" formControlName="phone" />
+            </label>
+            <label>
+              <span class="field-label">Passport Number</span>
+              <input type="text" formControlName="passportNumber" />
+            </label>
+            <label>
+              <span class="field-label">Nationality</span>
+              <input type="text" formControlName="nationality" />
+            </label>
+            <label>
+              <span class="field-label">Date of Birth</span>
+              <input type="date" formControlName="dateOfBirth" />
+            </label>
+          </form>
+
+          <div class="photo-edit">
+            <div class="photo-preview">
+              <div class="photo-avatar">
+                <img *ngIf="profileForm.controls.profilePhotoUrl.value" [src]="profileForm.controls.profilePhotoUrl.value" alt="Profile photo preview" />
+                <span *ngIf="!profileForm.controls.profilePhotoUrl.value">{{ profile.fullName.charAt(0) }}</span>
+              </div>
+              <div>
+                <p class="photo-title">Profile Photo</p>
+                <p class="photo-name">{{ selectedPhotoName || 'No file selected' }}</p>
+              </div>
+            </div>
+            <div class="photo-buttons">
+              <input #photoInput type="file" accept="image/*" (change)="onPhotoSelected($event)" />
+              <button class="btn btn-primary" type="button" (click)="photoInput.click()">Upload</button>
+              <button class="btn btn-ghost" type="button" (click)="removePhoto()">Remove</button>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn btn-primary" type="button" [disabled]="isSaving" (click)="saveProfile()">{{ isSaving ? 'Saving...' : 'Save Profile' }}</button>
+            <button class="btn btn-ghost" type="button" (click)="toggleEditMode()">Cancel</button>
+          </div>
+        </article>
+
+        <article class="panel password-card">
+          <div class="section-head inline">
+            <h3>Password & Security</h3>
+            <button class="btn btn-secondary" type="button" (click)="togglePasswordForm()">
+              {{ showPasswordForm ? 'Hide Password Form' : 'Change Password' }}
+            </button>
+          </div>
+
+          <form class="password-grid" *ngIf="showPasswordForm" [formGroup]="passwordForm" (ngSubmit)="updatePassword()">
+            <label>
+              <span class="field-label">Current Password</span>
+              <input type="password" formControlName="currentPassword" />
+            </label>
+            <label>
+              <span class="field-label">New Password</span>
+              <input type="password" formControlName="newPassword" placeholder="8-20 chars, upper/lower/number/symbol" />
+            </label>
+            <div class="actions-row full">
+              <button class="btn btn-primary" type="submit" [disabled]="isSaving">Update Password</button>
+              <button class="btn btn-ghost" type="button" (click)="logout()">Logout</button>
+            </div>
+          </form>
+        </article>
+      </section>
+    </ng-template>
+  </div>
+</section>
+
+<ng-template #errorBlock>
+  <section class="profile-page">
+    <div class="profile-shell">
+      <article class="panel error-card">
+        <h2>Profile unavailable</h2>
+        <p class="error-text">{{ errorMessage }}</p>
+        <button class="btn btn-primary" type="button" (click)="logout()">Go to Login</button>
+      </article>
+    </div>
+  </section>
+</ng-template>

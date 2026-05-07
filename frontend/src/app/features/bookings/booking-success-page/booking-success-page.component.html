@@ -1,0 +1,118 @@
+<section class="success-page">
+  <div class="success-shell">
+    <header>
+      <p class="eyebrow">Booking Confirmed</p>
+      <h2>Your trip is ready</h2>
+      <p>Payment has been completed and your PNR is now active for travel.</p>
+    </header>
+
+    <p class="error-text" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="state-text" *ngIf="isLoading">Loading booking details...</p>
+
+    <article class="success-card" *ngIf="booking && !isLoading">
+      <div class="meta-grid">
+        <div>
+          <span>PNR</span>
+          <strong>{{ pnr }}</strong>
+        </div>
+        <div>
+          <span>Booking ID</span>
+          <strong>{{ bookingId }}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{{ booking.status }}</strong>
+        </div>
+      </div>
+
+      <div class="tickets-list" *ngIf="passengers.length; else ticketPendingState">
+        <app-ticket-card
+          *ngFor="let passenger of passengers"
+          [booking]="booking"
+          [passenger]="passenger"
+          (ticketClick)="openTicketModal(passenger)">
+        </app-ticket-card>
+      </div>
+      <ng-template #ticketPendingState>
+        <p class="state-text">Passenger ticket details are not available yet for this booking.</p>
+      </ng-template>
+
+      <div class="ticket-grid">
+        <div class="ticket-actions">
+          <button type="button" class="cta-button" (click)="downloadTicket()">Download Ticket PDF</button>
+          <a routerLink="/my-bookings" class="link-btn">Go to My Bookings</a>
+        </div>
+
+        <figure class="qr-panel" *ngIf="qrImageUrl">
+          <img [src]="qrImageUrl" alt="Booking QR code" />
+          <figcaption>Scan this QR at check-in</figcaption>
+        </figure>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="ticket-modal-backdrop" *ngIf="isTicketModalOpen && booking && selectedPassenger" (click)="closeTicketModal()">
+  <article class="ticket-modal" (click)="$event.stopPropagation()">
+    <header class="modal-head">
+      <div>
+        <p class="eyebrow">E-Ticket</p>
+        <h3>{{ selectedPassenger.title }} {{ selectedPassenger.firstName }} {{ selectedPassenger.lastName }}</h3>
+      </div>
+      <button type="button" class="close-btn" (click)="closeTicketModal()">Close</button>
+    </header>
+
+    <div class="a4-body">
+      <div class="a4-row">
+        <div>
+          <span>PNR</span>
+          <strong>{{ booking.pnrCode }}</strong>
+        </div>
+        <div>
+          <span>Booking ID</span>
+          <strong>{{ booking.bookingId }}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{{ booking.status }}</strong>
+        </div>
+      </div>
+
+      <div class="a4-row">
+        <div>
+          <span>Flight</span>
+          <strong>Flight {{ booking.flightId }}</strong>
+        </div>
+        <div>
+          <span>Seat</span>
+          <strong>{{ selectedPassenger.seatNumber || 'Seat pending' }}</strong>
+        </div>
+        <div>
+          <span>Ticket Number</span>
+          <strong>{{ selectedPassenger.ticketNumber || 'Ticket pending' }}</strong>
+        </div>
+      </div>
+
+      <div class="a4-grid">
+        <div class="fare-box">
+          <h4>Fare Breakdown</h4>
+          <div><span>Base Fare</span><strong>INR {{ booking.baseFare | number: '1.0-0' }}</strong></div>
+          <div><span>Seat Charges</span><strong>INR {{ booking.seatCharge | number: '1.0-0' }}</strong></div>
+          <div><span>Baggage Charges</span><strong>INR {{ booking.baggageCharge | number: '1.0-0' }}</strong></div>
+          <div><span>Meal Charges</span><strong>INR {{ booking.mealCharge | number: '1.0-0' }}</strong></div>
+          <div><span>Taxes & Fees</span><strong>INR {{ booking.taxes | number: '1.0-0' }}</strong></div>
+          <div class="total"><span>Total Fare</span><strong>INR {{ booking.totalFare | number: '1.0-0' }}</strong></div>
+        </div>
+        <figure class="qr-box" *ngIf="qrImageUrl">
+          <img [src]="qrImageUrl" alt="Booking QR code" />
+          <figcaption>Scan at check-in</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="cta-button" (click)="downloadTicket()">Download Ticket PDF</button>
+      <button type="button" class="secondary-button" (click)="closeTicketModal()">Close</button>
+    </footer>
+  </article>
+</section>

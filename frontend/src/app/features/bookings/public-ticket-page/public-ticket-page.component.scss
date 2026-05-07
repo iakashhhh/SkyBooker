@@ -1,0 +1,39 @@
+.public-ticket-page {
+  min-height: calc(100vh - 74px);
+  padding: 1.8rem 1rem 2rem;
+  background: linear-gradient(180deg, #f3f8ff 0%, #ffffff 70%);
+}
+
+.page-shell {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #2b67b2;
+  font-weight: 800;
+}
+
+h2 {
+  margin: 0.25rem 0 0;
+}
+
+.state-text {
+  color: #5a6f8b;
+}
+
+.error-text {
+  color: #a3303d;
+}
+
+.home-link {
+  justify-self: center;
+  color: #1e56ab;
+  font-weight: 700;
+  text-decoration: none;
+}

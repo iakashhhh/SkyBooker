@@ -1,0 +1,229 @@
+.final-ticket {
+  background: #ffffff;
+  border: 1px solid #dce7f7;
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(22, 46, 82, 0.14);
+  padding: 1.1rem;
+  color: #192b46;
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.9rem;
+  align-items: center;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #e6eef9;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(130deg, #1f5fff, #2db1de);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2964b4;
+  font-weight: 800;
+  font-size: 0.74rem;
+}
+
+.ticket-header h3 {
+  margin: 0.18rem 0 0;
+  font-size: 1.25rem;
+}
+
+.meta-top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(100px, 1fr));
+  gap: 0.55rem;
+}
+
+.meta-top > div,
+.details-grid > div,
+.fare-grid > div,
+.passenger-strip > div {
+  border: 1px solid #e3ecf8;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 0.45rem 0.6rem;
+}
+
+span {
+  display: block;
+  font-size: 0.69rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #5b7090;
+}
+
+strong {
+  margin-top: 0.18rem;
+  display: block;
+  font-size: 0.95rem;
+}
+
+.ticket-main {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: 70% 30%;
+  gap: 0.85rem;
+}
+
+.ticket-left {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.passenger-strip {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.55rem;
+}
+
+.passenger-strip small {
+  display: block;
+  margin-top: 0.2rem;
+  color: #5d7392;
+}
+
+.route-visual {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.route-visual .code {
+  font-size: 1.42rem;
+  font-weight: 900;
+  color: #16345a;
+}
+
+.track {
+  position: relative;
+  min-height: 20px;
+}
+
+.track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 2px dashed #8faad0;
+}
+
+.track span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  padding: 0 0.4rem;
+  font-size: 1rem;
+  color: #2f5f9f;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ticket-right {
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2059c8, #2e78d8);
+  padding: 0.8rem;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.55rem;
+}
+
+.qr-shell {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0.38rem;
+}
+
+.ticket-right p {
+  margin: 0;
+  color: #e8f0ff;
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.fare-row {
+  margin-top: 0.85rem;
+}
+
+.fare-row h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: #25538d;
+}
+
+.fare-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.fare-grid .total {
+  border-color: #b9d7c5;
+  background: #eefaf2;
+}
+
+.fare-grid .total strong {
+  color: #0f7548;
+}
+
+.rules {
+  margin-top: 0.8rem;
+  border-top: 1px dashed #d3e3f8;
+  padding-top: 0.65rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.rules p {
+  margin: 0;
+  color: #506784;
+  font-size: 0.78rem;
+}
+
+.rules .booked-at {
+  color: #244e8f;
+  font-weight: 700;
+}
+
+.final-ticket--public {
+  box-shadow: none;
+}
+
+@media (max-width: 860px) {
+  .ticket-main,
+  .fare-grid,
+  .details-grid,
+  .passenger-strip,
+  .meta-top {
+    grid-template-columns: 1fr;
+  }
+}

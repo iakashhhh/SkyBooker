@@ -1,0 +1,82 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/**
+        - id: flight-service-route
+          uri: lb://flight-service
+          predicates:
+            - Path=/flights/**
+        - id: booking-service-route
+          uri: lb://booking-service
+          predicates:
+            - Path=/api/v1/bookings/**
+        - id: seat-service-route
+          uri: lb://seat-service
+          predicates:
+            - Path=/seats/**
+        - id: passenger-service-route
+          uri: lb://passenger-service
+          predicates:
+            - Path=/api/v1/passengers/**
+        - id: payment-service-route
+          uri: lb://payment-service
+          predicates:
+            - Path=/payments/**
+        - id: notification-service-route
+          uri: lb://notification-service
+          predicates:
+            - Path=/notifications/**
+        - id: airport-service-route
+          uri: lb://airline-airport-service
+          predicates:
+            - Path=/airports/**
+        - id: airline-service-route
+          uri: lb://airline-airport-service
+          predicates:
+            - Path=/airlines/**
+        - id: staff-airline-service-route
+          uri: lb://airline-airport-service
+          predicates:
+            - Path=/staff-airlines/**
+        - id: admin-service-route
+          uri: lb://admin-server
+          predicates:
+            - Path=/api/v1/admin/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - '*'
+            allowCredentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

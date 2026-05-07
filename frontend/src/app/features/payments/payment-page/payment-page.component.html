@@ -1,0 +1,120 @@
+<section class="payment-page">
+  <div class="page-shell">
+    <article class="progress-card">
+      <p class="eyebrow">Checkout Journey</p>
+      <div class="step-strip">
+        <span class="step done">Seat Selection</span>
+        <span class="step done">Passenger Details</span>
+        <span class="step active">Payment</span>
+      </div>
+    </article>
+
+    <article class="hero-card" *ngIf="isLoading">
+      <p class="eyebrow">Payment</p>
+      <h2>Complete Your Payment</h2>
+      <div class="loading-state" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p class="state-text">Fetching your booking...</p>
+      </div>
+    </article>
+
+    <article class="hero-card" *ngIf="!isLoading && errorMessage">
+      <p class="eyebrow">Payment</p>
+      <h2>Complete Your Payment</h2>
+      <p class="error-text state-text">{{ errorMessage }}</p>
+      <div class="actions">
+        <button type="button" class="secondary-button" (click)="retryLoad()">Retry</button>
+      </div>
+    </article>
+
+    <div class="checkout-grid" *ngIf="!isLoading && !errorMessage && booking">
+      <article class="checkout-card">
+        <p class="eyebrow">Payment</p>
+        <h2>Complete Your Payment</h2>
+        <p class="section-note">Review your itinerary and continue to secure checkout.</p>
+
+        <div class="summary-row meta-row">
+          <div>
+            <span>Route</span>
+            <strong>{{ routeLabel }}</strong>
+          </div>
+          <div>
+            <span>Airline</span>
+            <strong>{{ airlineName }}</strong>
+          </div>
+          <div>
+            <span>Passengers</span>
+            <strong>{{ requiredPassengerCount }}</strong>
+          </div>
+        </div>
+
+        <div class="summary-row id-row">
+          <div>
+            <span>PNR</span>
+            <strong>{{ pnr }}</strong>
+          </div>
+          <div>
+            <span>Booking ID</span>
+            <strong>{{ booking.bookingId }}</strong>
+          </div>
+          <div>
+            <span>Total Amount</span>
+            <strong class="fare-highlight">₹{{ booking.totalFare | number: '1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <form [formGroup]="paymentForm" (ngSubmit)="initiate()">
+          <div class="mode-grid">
+            <button
+              type="button"
+              class="mode-card"
+              *ngFor="let mode of paymentModes"
+              [class.active]="paymentForm.controls.paymentMode.value === mode.value"
+              (click)="paymentForm.controls.paymentMode.setValue(mode.value)">
+              <strong>{{ mode.label }}</strong>
+              <span>{{ mode.note }}</span>
+            </button>
+          </div>
+
+          <button type="submit" class="cta-button" [disabled]="!canInitiatePayment">
+            {{ isProcessing ? 'Opening payment gateway...' : ('Pay ₹' + (booking.totalFare | number: '1.2-2')) }}
+          </button>
+        </form>
+
+        <p class="state-text" *ngIf="!hasAllPassengerDetails">
+          Please complete passenger details for all selected seats before payment.
+        </p>
+      </article>
+
+      <aside class="checkout-side">
+        <article class="side-card">
+          <p class="side-label">Booking Summary</p>
+          <div class="order-row">
+            <span>Base fare</span>
+            <strong>₹{{ booking.baseFare | number: '1.2-2' }}</strong>
+          </div>
+          <div class="order-row">
+            <span>Seat charges</span>
+            <strong>₹{{ booking.seatCharge | number: '1.2-2' }}</strong>
+          </div>
+          <div class="order-row">
+            <span>Baggage charges</span>
+            <strong>₹{{ booking.baggageCharge | number: '1.2-2' }}</strong>
+          </div>
+          <div class="order-row">
+            <span>Meal charges</span>
+            <strong>₹{{ booking.mealCharge | number: '1.2-2' }}</strong>
+          </div>
+          <div class="order-row">
+            <span>Taxes</span>
+            <strong>₹{{ booking.taxes | number: '1.2-2' }}</strong>
+          </div>
+          <div class="order-row total-row">
+            <span>Total</span>
+            <strong>₹{{ booking.totalFare | number: '1.2-2' }}</strong>
+          </div>
+        </article>
+      </aside>
+    </div>
+  </div>
+</section>
