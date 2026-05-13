@@ -131,6 +131,17 @@ describe('SeatSelectionComponent', () => {
     expect(component.contactEmail).toBe('user@test.com');
   });
 
+  it('keeps fallback contact fields when profile fetch fails and still loads seat map', () => {
+    authApiSpy.getProfile.and.returnValue(throwError(() => new Error('profile unavailable')));
+
+    component.ngOnInit();
+
+    expect(authApiSpy.getProfile).toHaveBeenCalled();
+    expect(component.contactEmail).toBe('passenger@skybooker.com');
+    expect(component.contactPhone).toBe('9999999999');
+    expect(seatApiSpy.getSeatMap).toHaveBeenCalledWith(77, 180);
+  });
+
   it('holds seat successfully and starts timer when hold expiry is provided', () => {
     component.flightId = 77;
     component.seatMap = {

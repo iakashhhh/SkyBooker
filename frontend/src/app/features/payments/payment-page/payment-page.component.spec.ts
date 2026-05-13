@@ -481,4 +481,58 @@ describe('PaymentPageComponent', () => {
 
     expect(paymentApiServiceSpy.processPayment).not.toHaveBeenCalled();
   });
+
+  it('falls back to unavailable airline name when airline lookup fails', async () => {
+    const httpSpy = TestBed.inject(HttpClient) as jasmine.SpyObj<HttpClient>;
+    httpSpy.get.and.returnValues(
+      of({ originAirportCode: 'amd', destinationAirportCode: 'hyd', airlineId: 22 } as any),
+      throwError(() => new Error('airline down'))
+    );
+
+    const result = await firstValueFrom((component as any).fetchFlightMeta(99));
+
+    expect(result).toEqual({
+      routeLabel: 'AMD -> HYD',
+      airlineName: 'Airline unavailable'
+    });
+  });
+
+  it('handles booking lookup failure while loading checkout details', () => {
+    const bookingApiService = (component as any).bookingApiService as jasmine.SpyObj<BookingApiService>;
+    bookingApiService.getBookingById.and.returnValue(throwError(() => new Error('not found')));
+    const journey = (component as any).bookingJourneyService as jasmine.SpyObj<BookingJourneyService>;
+    journey.getActiveBookingContext.and.returnValue({ bookingId: 'BKG-X' } as any);
+
+    (component as any).loadCheckoutDetails();
+
+    expect(component.errorMessage).toBe('Unable to load payment details');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('rejects razorpay key when backend returns an empty key', async () => {
+    paymentApiServiceSpy.getPaymentKey.and.returnValue(of({ key: '   ' } as any));
+
+    await expectAsync((component as any).ensureRazorpayKey()).toBeRejected();
+  });
+
+  it('reuses cached razorpay key instead of refetching', async () => {
+    paymentApiServiceSpy.getPaymentKey.and.returnValue(of({ key: 'rzp_live_abc' } as any));
+
+    const first = await (component as any).ensureRazorpayKey();
+    const second = await (component as any).ensureRazorpayKey();
+
+    expect(first).toBe('rzp_live_abc');
+    expect(second).toBe('rzp_live_abc');
+    expect(paymentApiServiceSpy.getPaymentKey).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns true immediately when razorpay global is already present', async () => {
+    (window as any).Razorpay = function () {};
+    try {
+      const loaded = await (component as any).ensureRazorpayScript();
+      expect(loaded).toBeTrue();
+    } finally {
+      delete (window as any).Razorpay;
+    }
+  });
 });

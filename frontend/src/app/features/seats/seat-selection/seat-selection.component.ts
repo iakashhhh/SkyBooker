@@ -96,8 +96,8 @@ export class SeatSelectionComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: () => {
-        this.contactEmail = this.contactEmail;
-        this.contactPhone = this.contactPhone;
+        // Keep existing fallback contact info already loaded from local state.
+        this.cdr.markForCheck();
       }
     });
 

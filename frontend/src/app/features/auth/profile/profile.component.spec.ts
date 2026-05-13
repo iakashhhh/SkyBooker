@@ -299,4 +299,45 @@ describe('ProfileComponent', () => {
     expect(component.selectedPhotoName).toBe('');
     expect(component.statusMessage).toContain('removed');
   });
+
+  it('ignores photo upload event when no file is selected', async () => {
+    component.errorMessage = '';
+
+    await component.onPhotoSelected({ target: { files: [] } } as any);
+
+    expect(component.errorMessage).toBe('');
+    expect(component.selectedPhotoName).toBe('');
+  });
+
+  it('updates profile photo field when image optimization succeeds', async () => {
+    const imageFile = new File(['photo'], 'avatar.png', { type: 'image/png' });
+    spyOn<any>(component, 'optimizeProfilePhoto').and.returnValue(Promise.resolve('data:image/webp;base64,abc'));
+
+    await component.onPhotoSelected({ target: { files: [imageFile] } } as any);
+
+    expect(component.profileForm.controls.profilePhotoUrl.value).toBe('data:image/webp;base64,abc');
+    expect(component.statusMessage).toContain('Profile photo selected');
+    expect(component.errorMessage).toBe('');
+  });
+
+  it('shows error when image optimization fails for a valid image', async () => {
+    const imageFile = new File(['photo'], 'avatar.png', { type: 'image/png' });
+    spyOn<any>(component, 'optimizeProfilePhoto').and.returnValue(Promise.reject(new Error('fail')));
+
+    await component.onPhotoSelected({ target: { files: [imageFile] } } as any);
+
+    expect(component.errorMessage).toBe('Could not process this image. Please try another image.');
+  });
+
+  it('resets edit/password states when edit mode is turned off', () => {
+    component.isEditMode = true;
+    component.showPasswordForm = true;
+    component.passwordForm.patchValue({ currentPassword: 'Old@1234', newPassword: 'NewPass@123' });
+
+    component.toggleEditMode();
+
+    expect(component.isEditMode).toBeFalse();
+    expect(component.showPasswordForm).toBeFalse();
+    expect(component.passwordForm.value.currentPassword).toBeNull();
+  });
 });

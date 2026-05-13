@@ -227,4 +227,94 @@ describe('LoginComponent', () => {
 
     expect(component.errorMessage).toContain('Google login is not configured yet');
   });
+
+  it('redirects immediately when token already exists in local storage', () => {
+    spyOn(localStorage, 'getItem').and.callFake((key: string) => {
+      if (key === 'skybooker_token') {
+        return 'jwt-token';
+      }
+      if (key === 'skybooker_role') {
+        return 'PASSENGER';
+      }
+      return null;
+    });
+
+    component.ngOnInit();
+
+    expect(routerSpy.navigateByUrl).toHaveBeenCalledWith('/');
+  });
+
+  it('falls back to default route when booking resume API errors out', () => {
+    authApiSpy.login.and.returnValue(of({
+      token: 'jwt',
+      email: 'akash@test.com',
+      role: 'PASSENGER',
+      userId: 5
+    }));
+    bookingJourneySpy.resumePendingBooking.and.returnValue(throwError(() => new Error('journey down')));
+
+    component.form.setValue({ email: 'akash@test.com', password: 'Password@123' });
+    component.submit();
+
+    expect(routerSpy.navigateByUrl).toHaveBeenCalledWith('/');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('routes booking context back to passenger details when active context exists', () => {
+    const route = TestBed.inject(ActivatedRoute) as any;
+    route.snapshot.queryParamMap = convertToParamMap({
+      context: 'booking',
+      returnUrl: '/passenger-details'
+    });
+    route.snapshot.queryParams = { context: 'booking', returnUrl: '/passenger-details' };
+
+    authApiSpy.login.and.returnValue(of({
+      token: 'jwt',
+      email: 'akash@test.com',
+      role: 'PASSENGER',
+      userId: 5
+    }));
+    bookingJourneySpy.resumePendingBooking.and.returnValue(of(null));
+    bookingJourneySpy.getActiveBookingContext.and.returnValue({
+      bookingId: 'BKG-77',
+      pnr: 'PNR77',
+      userId: 5,
+      amount: 3200
+    } as any);
+
+    component.form.setValue({ email: 'akash@test.com', password: 'Password@123' });
+    component.submit();
+
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/passenger-details'], {
+      queryParams: jasmine.objectContaining({
+        bookingId: 'BKG-77',
+        pnr: 'PNR77'
+      })
+    });
+  });
+
+  it('reports reset-password failure message when API fails', () => {
+    authApiSpy.resetPassword.and.returnValue(throwError(() => new Error('otp mismatch')));
+    component.forgotMode = true;
+    component.forgotForm.patchValue({
+      email: 'akash@test.com',
+      otpCode: '123456',
+      newPassword: 'Password@123'
+    });
+
+    component.resetPassword();
+
+    expect(component.errorMessage).toBe('Unable to reset password.');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('handles google credential login error path', () => {
+    authApiSpy.googleLogin.and.returnValue(throwError(() => ({ error: { message: 'google auth failed' } })));
+
+    component['handleGoogleCredential']('google-token');
+
+    expect(authApiSpy.googleLogin).toHaveBeenCalledWith({ idToken: 'google-token', role: 'PASSENGER' });
+    expect(component.errorMessage).toBe('google auth failed');
+    expect(component.isLoading).toBeFalse();
+  });
 });

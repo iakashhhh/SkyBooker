@@ -263,6 +263,7 @@
 
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Flight operations list with route, status, seats, and actions</caption>
               <thead>
                 <tr>
                   <th>Flight</th>
@@ -344,6 +345,7 @@
           </div>
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Flight schedules with departure and arrival timeline details</caption>
               <thead>
                 <tr>
                   <th>Flight</th>
@@ -413,6 +415,7 @@
           </div>
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Managed booking records including status and fare</caption>
               <thead>
                 <tr>
                   <th></th>
@@ -506,6 +509,7 @@
 
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Passenger manifest with seat and ticket references</caption>
               <thead>
                 <tr>
                   <th>Name</th>
@@ -550,6 +554,7 @@
           <div class="panel-head"><div><p class="panel-label">Payments</p><h3>{{ getSectionTotal('payments') }} payment records</h3></div></div>
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Payment records by booking and status</caption>
               <thead>
                 <tr>
                   <th>Payment ID</th>
@@ -592,6 +597,7 @@
           <div class="panel-head"><div><p class="panel-label">Users</p><h3>{{ getSectionTotal('users') }} registered users</h3></div></div>
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Registered users with role and status</caption>
               <thead>
                 <tr>
                   <th>Name</th>
@@ -642,6 +648,7 @@
           <div class="panel-head"><div><p class="panel-label">Airline Catalog</p><h3>{{ getSectionTotal('airlines') }} airlines available</h3></div></div>
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Airline catalog with code, country, and status</caption>
               <thead><tr><th>Name</th><th>IATA</th><th>Country</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 <tr *ngFor="let airline of pagedAirlines">
@@ -698,6 +705,7 @@
           </div>
           <div class="table-wrap">
             <table>
+              <caption class="table-caption-sr">Airport catalog with city and timezone information</caption>
               <thead><tr><th>Name</th><th>IATA</th><th>City</th><th>Timezone</th><th>Actions</th></tr></thead>
               <tbody>
                 <tr *ngFor="let airport of pagedAirports"><td>{{ airport.name }}</td><td>{{ airport.iataCode }}</td><td>{{ airport.city }}, {{ airport.country }}</td><td>{{ airport.timezone }}</td><td class="action-cell"><button type="button" class="ghost-btn small-btn" (click)="editAirport(airport)">Edit</button><button type="button" class="danger-btn small-btn" (click)="deleteAirport(airport.airportId)">Delete</button></td></tr>

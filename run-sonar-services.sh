@@ -152,6 +152,9 @@ PY
     -Dsonar.projectKey=skybooker-frontend \
     -Dsonar.projectName="SkyBooker Frontend" \
     -Dsonar.sources=src \
+    -Dsonar.tests=src \
+    -Dsonar.test.inclusions=src/**/*.spec.ts \
+    -Dsonar.exclusions=src/**/*.spec.ts \
     -Dsonar.host.url="${SONAR_URL}" \
     -Dsonar.login="${SONAR_TOKEN}" \
     -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info; then

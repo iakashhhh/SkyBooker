@@ -241,4 +241,89 @@ describe('RegisterComponent', () => {
     expect(component.form.controls.role.value).toBe('PASSENGER');
     expect(component.form.controls.airlineId.value).toBe('33');
   });
+
+  it('falls back to default route when booking resume fails after registration', () => {
+    authApiSpy.register.and.returnValue(of({
+      token: 'jwt',
+      email: 'akash@test.com',
+      role: 'PASSENGER',
+      userId: 7
+    }));
+    bookingJourneySpy.resumePendingBooking.and.returnValue(throwError(() => new Error('resume down')));
+
+    fillValidPassengerForm(component);
+    component.submit();
+
+    expect(routerSpy.navigateByUrl).toHaveBeenCalledWith('/');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('routes booking context to passenger-details when active booking exists', () => {
+    const route = TestBed.inject(ActivatedRoute) as any;
+    route.snapshot.queryParamMap = convertToParamMap({
+      context: 'booking',
+      returnUrl: '/passenger-details'
+    });
+    route.snapshot.queryParams = { context: 'booking', returnUrl: '/passenger-details' };
+
+    authApiSpy.register.and.returnValue(of({
+      token: 'jwt',
+      email: 'akash@test.com',
+      role: 'PASSENGER',
+      userId: 7
+    }));
+    bookingJourneySpy.resumePendingBooking.and.returnValue(of(null));
+    bookingJourneySpy.getActiveBookingContext.and.returnValue({
+      bookingId: 'BKG-22',
+      pnr: 'PNR22',
+      userId: 7,
+      amount: 5600
+    } as any);
+
+    fillValidPassengerForm(component);
+    component.submit();
+
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/passenger-details'], {
+      queryParams: jasmine.objectContaining({
+        bookingId: 'BKG-22',
+        pnr: 'PNR22'
+      })
+    });
+  });
+
+  it('marks booking-return page description when context is booking', () => {
+    const route = TestBed.inject(ActivatedRoute) as any;
+    route.snapshot.queryParamMap = convertToParamMap({ context: 'booking' });
+    route.snapshot.queryParams = { context: 'booking' };
+
+    expect(component.isBookingReturn).toBeTrue();
+    expect(component.pageDescription).toContain('jump straight back into checkout');
+  });
+
+  it('shows error when google flow is used for airline staff without airline selection', () => {
+    component.selectRole('AIRLINE_STAFF');
+    component.form.controls.airlineId.setValue('');
+
+    component['handleGoogleCredential']('google-token');
+
+    expect(authApiSpy.googleLogin).not.toHaveBeenCalled();
+    expect(component.errorMessage).toContain('Please select an airline before continuing with Google');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('handles google signup failure with backend error message', () => {
+    component.selectRole('AIRLINE_STAFF');
+    component.form.controls.airlineId.setValue('9');
+    authApiSpy.googleLogin.and.returnValue(throwError(() => ({ error: { message: 'google signup failed' } })));
+
+    component['handleGoogleCredential']('google-token');
+
+    expect(authApiSpy.googleLogin).toHaveBeenCalledWith({
+      idToken: 'google-token',
+      role: 'AIRLINE_STAFF',
+      airlineId: 9
+    });
+    expect(component.errorMessage).toBe('google signup failed');
+    expect(component.isLoading).toBeFalse();
+  });
 });

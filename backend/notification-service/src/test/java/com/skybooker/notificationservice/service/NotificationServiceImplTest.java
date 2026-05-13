@@ -19,13 +19,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -238,6 +241,88 @@ class NotificationServiceImplTest {
     }
 
     @Test
+    void processEvent_shouldSendEmailWithPdfAttachmentWhenRecipientEmailIsValid() {
+        NotificationEvent event = new NotificationEvent();
+        event.setRecipientId(56L);
+        event.setEventName("BOOKING_CONFIRMED");
+        event.setChannels(List.of(NotificationChannel.EMAIL));
+        event.setRecipientEmail("traveler56@gmail.com");
+        event.setRelatedBookingId("BKG-56");
+        event.setPnrCode("PNR56");
+        event.setFlightNumber("SB-560");
+        event.setRouteFrom("DEL");
+        event.setRouteTo("GOI");
+
+        when(javaMailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getDefaultInstance(new Properties())));
+
+        AtomicLong idSequence = new AtomicLong(800);
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
+            Notification notification = invocation.getArgument(0);
+            if (notification.getNotificationId() == null) {
+                notification.setNotificationId(idSequence.getAndIncrement());
+            }
+            return notification;
+        });
+
+        NotificationResponse response = notificationService.processEvent(event);
+
+        assertEquals(NotificationChannel.APP, response.getChannel());
+        verify(javaMailSender).createMimeMessage();
+        verify(javaMailSender).send(any(MimeMessage.class));
+        verify(notificationRepository, times(4)).save(any(Notification.class));
+    }
+
+    @Test
+    void processEvent_shouldSendSmsWhenRecipientPhoneAvailable() {
+        NotificationEvent event = new NotificationEvent();
+        event.setRecipientId(57L);
+        event.setEventName("BOOKING_CONFIRMED");
+        event.setChannels(List.of(NotificationChannel.SMS));
+        event.setRecipientPhone("+911234567890");
+        event.setRelatedBookingId("BKG-57");
+
+        AtomicLong idSequence = new AtomicLong(900);
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
+            Notification notification = invocation.getArgument(0);
+            if (notification.getNotificationId() == null) {
+                notification.setNotificationId(idSequence.getAndIncrement());
+            }
+            return notification;
+        });
+
+        notificationService.processEvent(event);
+
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(4)).save(captor.capture());
+        assertTrue(captor.getAllValues().stream().anyMatch(notification ->
+            notification.getChannel() == NotificationChannel.SMS && notification.getStatus() == NotificationStatus.SENT
+        ));
+    }
+
+    @Test
+    void processEvent_shouldFallbackToBookingUpdateTitleForUnknownEventNames() {
+        NotificationEvent event = new NotificationEvent();
+        event.setRecipientId(58L);
+        event.setEventName("something_new");
+        event.setType(NotificationType.BOOKING);
+        event.setChannel(NotificationChannel.APP);
+
+        AtomicLong idSequence = new AtomicLong(1000);
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
+            Notification notification = invocation.getArgument(0);
+            if (notification.getNotificationId() == null) {
+                notification.setNotificationId(idSequence.getAndIncrement());
+            }
+            return notification;
+        });
+
+        NotificationResponse response = notificationService.processEvent(event);
+
+        assertEquals("Booking Update", response.getTitle());
+        assertTrue(response.getMessage().contains("Your booking has been updated"));
+    }
+
+    @Test
     void getByRecipient_shouldValidateRecipientId() {
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
             () -> notificationService.getByRecipient(0L));
@@ -275,6 +360,17 @@ class NotificationServiceImplTest {
 
         assertEquals(1, responses.size());
         assertEquals(NotificationChannel.APP, responses.get(0).getChannel());
+    }
+
+    @Test
+    void getByRecipient_shouldReturnEmptyListWhenNothingExists() {
+        when(notificationRepository.findByRecipientIdAndChannelOrderByCreatedAtDesc(101L, NotificationChannel.APP))
+            .thenReturn(List.of());
+
+        List<NotificationResponse> responses = notificationService.getByRecipient(101L);
+
+        assertNotNull(responses);
+        assertTrue(responses.isEmpty());
     }
 
     @Test

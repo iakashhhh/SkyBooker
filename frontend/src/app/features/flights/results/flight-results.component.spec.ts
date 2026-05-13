@@ -405,4 +405,68 @@ describe('FlightResultsComponent', () => {
     expect(request.seatClass).toBeUndefined();
     expect(request.departureWindow).toBeUndefined();
   });
+
+  it('validates flexible search month and blocks past months', () => {
+    const monthBeforeToday = '2000-01';
+    routeMock.snapshot.queryParams = {
+      ...baseParams,
+      flexibleDate: 'true',
+      journeyMonth: monthBeforeToday
+    };
+
+    (component as any).loadResults();
+
+    expect(component.errorMessage).toContain('cannot start in a past month');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('reports no flights when flexible one-way search returns empty across month', async () => {
+    flightApiSpy.searchOneWay.and.returnValue(of([]));
+
+    await (component as any).loadFlexibleOneWayResults({
+      origin: 'DEL',
+      destination: 'BLR',
+      journeyMonth: '2099-07',
+      flexibleDate: 'true'
+    });
+
+    expect(component.outboundFlights).toEqual([]);
+    expect(component.errorMessage).toContain('No flights available for 2099-07');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('reports no flights when flexible round-trip search returns empty across month', async () => {
+    flightApiSpy.searchRoundTrip.and.returnValue(of({ outboundFlights: [], returnFlights: [] } as any));
+
+    await (component as any).loadFlexibleRoundTripResults({
+      origin: 'DEL',
+      destination: 'BLR',
+      journeyMonth: '2099-08',
+      returnMonth: '2099-08',
+      flexibleDate: 'true'
+    });
+
+    expect(component.outboundFlights).toEqual([]);
+    expect(component.returnFlights).toEqual([]);
+    expect(component.errorMessage).toContain('No round-trip flights available for 2099-08');
+    expect(component.isLoading).toBeFalse();
+  });
+
+  it('shows all page buttons without ellipsis when total pages are small', () => {
+    component.selectedPageSize = 10;
+    component.outboundFlights = Array.from({ length: 50 }, (_, index) => ({ ...oneWayFlights[0], flightId: index + 1 }));
+
+    expect(component.getVisiblePageButtons('OUTBOUND')).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('loads reference data fallback when airports and airlines APIs fail', () => {
+    airlineAirportSpy.getAirports.and.returnValue(throwError(() => new Error('airport down')));
+    airlineAirportSpy.getAirlines.and.returnValue(throwError(() => new Error('airline down')));
+
+    (component as any).loadReferenceData();
+
+    expect(component.airportOptions).toEqual([]);
+    expect(component.airlineNameById).toEqual({});
+    expect(component.isReferenceLoading).toBeFalse();
+  });
 });

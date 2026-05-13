@@ -20,10 +20,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -466,5 +470,199 @@ class PaymentServiceImplTest {
 
         assertEquals(PaymentStatus.FAILED, response.getStatus());
         assertEquals("declined", response.getGatewayResponse());
+    }
+
+    @Test
+    void shouldReuseExistingPaidPaymentWithoutSaving() {
+        Payment existing = new Payment();
+        existing.setPaymentId("pay-existing");
+        existing.setBookingId("BKG-EXISTING");
+        existing.setStatus(PaymentStatus.PAID);
+        existing.setAmount(new BigDecimal("950.00"));
+        existing.setCurrency("INR");
+        existing.setUserId(17L);
+        existing.setPaymentMode(PaymentMode.CARD);
+
+        when(paymentRepository.findByBookingId("BKG-EXISTING")).thenReturn(Optional.of(existing));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InitiatePaymentRequest request = new InitiatePaymentRequest();
+        request.setBookingId("BKG-EXISTING");
+        request.setAmount(new BigDecimal("1000.00"));
+        request.setCurrency("USD");
+        request.setPaymentMode(PaymentMode.UPI);
+
+        var response = paymentService.initiatePayment(request);
+
+        assertEquals("pay-existing", response.getPaymentId());
+        assertEquals(PaymentStatus.PAID, response.getStatus());
+        verify(paymentRepository).save(existing);
+    }
+
+    @Test
+    void shouldRegeneratePendingExistingPaymentWithNormalizedDefaults() {
+        Payment existing = new Payment();
+        existing.setPaymentId("pay-existing-pending");
+        existing.setBookingId("BKG-PENDING-EXISTING");
+        existing.setStatus(PaymentStatus.FAILED);
+        existing.setAmount(new BigDecimal("900.00"));
+        existing.setCurrency("EUR");
+        existing.setUserId(17L);
+        existing.setPaymentMode(PaymentMode.CARD);
+        existing.setTransactionId("TXN-OLD");
+        existing.setGatewayResponse("old");
+        existing.setRefundedAmount(new BigDecimal("10.00"));
+        existing.setRefundedAt(LocalDateTime.now().minusDays(1));
+        existing.setPaidAt(LocalDateTime.now().minusDays(2));
+
+        when(paymentRepository.findByBookingId("BKG-PENDING-EXISTING")).thenReturn(Optional.of(existing));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InitiatePaymentRequest request = new InitiatePaymentRequest();
+        request.setBookingId("BKG-PENDING-EXISTING");
+        request.setAmount(null);
+        request.setCurrency("  ");
+        request.setUserId(null);
+        request.setPaymentMode(null);
+
+        var response = paymentService.initiatePayment(request);
+
+        assertEquals(PaymentStatus.PENDING, response.getStatus());
+        assertEquals("INR", response.getCurrency());
+        assertEquals(PaymentMode.CARD, response.getPaymentMode());
+        assertEquals(existing.getUserId(), response.getUserId());
+        assertEquals(existing.getAmount(), response.getAmount());
+        assertEquals(null, response.getTransactionId());
+        assertEquals(null, response.getGatewayResponse());
+    }
+
+    @Test
+    void shouldVerifyPaymentWithConfiguredRazorpaySignature() throws Exception {
+        Payment signedPayment = new Payment();
+        signedPayment.setPaymentId("pay-signature");
+        signedPayment.setBookingId("BKG-SIGN");
+        signedPayment.setStatus(PaymentStatus.PENDING);
+        signedPayment.setAmount(new BigDecimal("1250.00"));
+        signedPayment.setCurrency("INR");
+        signedPayment.setUserId(44L);
+        signedPayment.setPaymentMode(PaymentMode.UPI);
+        signedPayment.setGatewayOrderId("order_123");
+
+        PaymentServiceImpl signedService = new PaymentServiceImpl(
+            paymentRepository,
+            bookingServiceClient,
+            null,
+            "skybooker.events",
+            "key_test",
+            "secret_test",
+            "https://api.razorpay.com"
+        );
+
+        when(paymentRepository.findByBookingId("BKG-SIGN")).thenReturn(Optional.of(signedPayment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        VerifyPaymentRequest request = new VerifyPaymentRequest();
+        request.setBookingId("BKG-SIGN");
+        request.setPaymentId("pay-signature");
+        request.setRazorpayOrderId("order_123");
+        request.setRazorpayPaymentId("pay_rzp_123");
+
+        String payload = "order_123|pay_rzp_123";
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(new SecretKeySpec("secret_test".getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+        request.setRazorpaySignature(HexFormat.of().formatHex(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8))));
+
+        var response = signedService.verifyPayment(request);
+
+        assertEquals(PaymentStatus.PAID, response.getStatus());
+        assertEquals("pay_rzp_123", response.getTransactionId());
+        verify(bookingServiceClient).updateBookingStatus("BKG-SIGN", "CONFIRMED");
+    }
+
+    @Test
+    void shouldFailVerificationWhenConfiguredSecretAndOrderMissing() {
+        Payment signedPayment = new Payment();
+        signedPayment.setPaymentId("pay-signature-fail");
+        signedPayment.setBookingId("BKG-SIGN-FAIL");
+        signedPayment.setStatus(PaymentStatus.PENDING);
+        signedPayment.setAmount(new BigDecimal("1250.00"));
+        signedPayment.setCurrency("INR");
+        signedPayment.setUserId(45L);
+        signedPayment.setPaymentMode(PaymentMode.UPI);
+        signedPayment.setGatewayOrderId("order_saved");
+
+        PaymentServiceImpl signedService = new PaymentServiceImpl(
+            paymentRepository,
+            bookingServiceClient,
+            null,
+            "skybooker.events",
+            "key_test",
+            "secret_test",
+            "https://api.razorpay.com"
+        );
+
+        when(paymentRepository.findByBookingId("BKG-SIGN-FAIL")).thenReturn(Optional.of(signedPayment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        VerifyPaymentRequest request = new VerifyPaymentRequest();
+        request.setBookingId("BKG-SIGN-FAIL");
+        request.setPaymentId("pay-signature-fail");
+        request.setRazorpayOrderId("   ");
+        request.setRazorpayPaymentId("pay_rzp_999");
+        request.setRazorpaySignature("abc");
+
+        var response = signedService.verifyPayment(request);
+
+        assertEquals(PaymentStatus.FAILED, response.getStatus());
+        verify(bookingServiceClient).updateBookingStatus("BKG-SIGN-FAIL", "CANCELLED");
+    }
+
+    @Test
+    void shouldFailGatewayInitializationWhenCredentialsConfiguredButApiUnavailable() {
+        PaymentServiceImpl gatewayService = new PaymentServiceImpl(
+            paymentRepository,
+            bookingServiceClient,
+            null,
+            "skybooker.events",
+            "key_test",
+            "secret_test",
+            "http://127.0.0.1:1"
+        );
+
+        when(paymentRepository.findByBookingId("BKG-GATEWAY")).thenReturn(Optional.empty());
+
+        InitiatePaymentRequest request = new InitiatePaymentRequest();
+        request.setBookingId("BKG-GATEWAY");
+        request.setUserId(77L);
+        request.setAmount(new BigDecimal("3000.00"));
+        request.setCurrency("INR");
+        request.setPaymentMode(PaymentMode.CARD);
+
+        assertThrows(BadRequestException.class, () -> gatewayService.initiatePayment(request));
+    }
+
+    @Test
+    void shouldThrowWhenVerifyBookingReferenceDoesNotExist() {
+        when(paymentRepository.findByBookingId("MISSING-VERIFY")).thenReturn(Optional.empty());
+
+        VerifyPaymentRequest request = new VerifyPaymentRequest();
+        request.setBookingId("MISSING-VERIFY");
+        request.setPaymentId("pay-404");
+        request.setRazorpayPaymentId("rzp");
+
+        assertThrows(ResourceNotFoundException.class, () -> paymentService.verifyPayment(request));
+    }
+
+    @Test
+    void shouldKeepRevenueZeroWhenNoPaidPaymentsPresent() {
+        Payment failed = new Payment();
+        failed.setPaymentId("pay-failed-revenue");
+        failed.setStatus(PaymentStatus.FAILED);
+        failed.setAmount(new BigDecimal("200.00"));
+
+        when(paymentRepository.findByPaidAtBetween(any(LocalDateTime.class), any(LocalDateTime.class)))
+            .thenReturn(List.of(failed));
+
+        assertEquals(BigDecimal.ZERO, paymentService.getRevenue(LocalDate.now().minusDays(1), LocalDate.now()));
     }
 }

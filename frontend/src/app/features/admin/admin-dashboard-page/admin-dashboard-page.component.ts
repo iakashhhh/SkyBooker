@@ -1794,9 +1794,7 @@ export class AdminDashboardPageComponent implements OnInit, OnDestroy {
       dashboard: this.adminApiService.getFlightDashboard().pipe(catchError(() => of(undefined))),
       flights: this.adminApiService.getManagedFlights().pipe(catchError(() => of([]))),
       managedBookings: this.adminApiService.getManagedBookings().pipe(catchError(() => of([]))),
-      managedPassengers: this.isStaff
-        ? this.adminApiService.getManagedPassengers().pipe(catchError(() => of([])))
-        : this.adminApiService.getManagedPassengers().pipe(catchError(() => of([])))
+      managedPassengers: this.adminApiService.getManagedPassengers().pipe(catchError(() => of([])))
     });
 
     if (this.isAdmin) {
