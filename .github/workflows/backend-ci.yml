@@ -38,6 +38,4 @@ jobs:
 
       - name: Build and run tests
         run: |
-          mvn -B -f backend/${{ matrix.service }}/pom.xml clean test \
-            -Deureka.client.enabled=false \
-            -Dspring.cloud.discovery.enabled=false
+          mvn -B -f backend/${{ matrix.service }}/pom.xml clean test
