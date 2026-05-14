@@ -1,0 +1,292 @@
+name: skybooker-prod
+
+x-common-java-env: &common-java-env
+  EUREKA_DEFAULT_ZONE: http://eureka-server:8761/eureka/
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50.0 -XX:InitialRAMPercentage=5.0 -XX:+UseSerialGC
+
+x-default-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auth_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    logging: *default-logging
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    ports:
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    logging: *default-logging
+
+  eureka-server:
+    image: akash7354/skybooker-eureka-server:latest
+    restart: unless-stopped
+    environment:
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50.0 -XX:InitialRAMPercentage=5.0 -XX:+UseSerialGC
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health | grep -q \"UP\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+    logging: *default-logging
+
+  api-gateway:
+    image: akash7354/skybooker-api-gateway:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *common-java-env
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q \"UP\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+    logging: *default-logging
+
+  admin-server:
+    image: akash7354/skybooker-admin-server:latest
+    restart: unless-stopped
+    environment:
+      <<: *common-java-env
+      AUTH_SERVICE_BASE_URL: http://api-gateway:8080
+      BOOKING_SERVICE_BASE_URL: http://api-gateway:8080
+      PAYMENT_SERVICE_BASE_URL: http://api-gateway:8080
+      AIRLINE_AIRPORT_SERVICE_BASE_URL: http://api-gateway:8080
+      FLIGHT_SERVICE_BASE_URL: http://api-gateway:8080
+      PASSENGER_SERVICE_BASE_URL: http://api-gateway:8080
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    logging: *default-logging
+
+  auth-service:
+    image: akash7354/skybooker-auth-service:latest
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: auth_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      AIRLINE_AIRPORT_SERVICE_BASE_URL: http://api-gateway:8080
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    logging: *default-logging
+
+  flight-service:
+    image: akash7354/skybooker-flight-service:latest
+    restart: unless-stopped
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: flight_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      FLIGHT_UPSTREAM_AIRLINE_AIRPORT_BASE_URL: http://airline-airport-service:8089
+      FLIGHT_UPSTREAM_BOOKING_BASE_URL: http://booking-service:8084
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      airline-airport-service:
+        condition: service_started
+    logging: *default-logging
+
+  seat-service:
+    image: akash7354/skybooker-seat-service:latest
+    restart: unless-stopped
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: seat_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    logging: *default-logging
+
+  booking-service:
+    image: akash7354/skybooker-booking-service:latest
+    restart: unless-stopped
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: booking_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      FLIGHT_SERVICE_BASE_URL: http://api-gateway:8080
+      SEAT_SERVICE_BASE_URL: http://api-gateway:8080
+      PAYMENT_SERVICE_BASE_URL: http://api-gateway:8080
+      PAYMENT_INTEGRATION_ENABLED: "true"
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    logging: *default-logging
+
+  passenger-service:
+    image: akash7354/skybooker-passenger-service:latest
+    restart: unless-stopped
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: passenger_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    logging: *default-logging
+
+  payment-service:
+    image: akash7354/skybooker-payment-service:latest
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: payment_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      BOOKING_SERVICE_BASE_URL: http://api-gateway:8080
+      RABBITMQ_HOST: rabbitmq
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    logging: *default-logging
+
+  notification-service:
+    image: akash7354/skybooker-notification-service:latest
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: notification_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      BOOKING_SERVICE_BASE_URL: http://api-gateway:8080
+      AUTH_SERVICE_BASE_URL: http://api-gateway:8080
+      FLIGHT_SERVICE_BASE_URL: http://api-gateway:8080
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_SMTP_STARTTLS: ${MAIL_SMTP_STARTTLS:-true}
+      NOTIFICATION_EMAIL_FROM: ${NOTIFICATION_EMAIL_FROM:-noreply@skybooker.com}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    logging: *default-logging
+
+  airline-airport-service:
+    image: akash7354/skybooker-airline-airport-service:latest
+    restart: unless-stopped
+    environment:
+      <<: *common-java-env
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: airline_airport_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    logging: *default-logging
+
+  frontend:
+    image: akash7354/skybooker-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    env_file:
+      - ./.env
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    logging: *default-logging
+
+volumes:
+  mysql_data:
+  rabbitmq_data:
