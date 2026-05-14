@@ -30,12 +30,12 @@ public class FlightDataSeeder implements CommandLineRunner {
     private static final int MAX_FLIGHTS_PER_ROUTE_DAY = 3;
 
     private static final List<String> AIRPORT_CODES = List.of(
-        "DEL", "MUM", "BLR", "HYD", "CCU", "GOI", "PNQ", "AMD", "CHE",
+        "DEL", "MUM", "BLR", "HYD", "CCU", "GOI", "PNQ", "AMD", "MAA",
         "DXB", "SIN", "LHR", "JFK"
     );
 
     private static final Set<String> DOMESTIC_CODES = Set.of(
-        "DEL", "MUM", "BLR", "HYD", "CCU", "GOI", "PNQ", "AMD", "CHE"
+        "DEL", "MUM", "BLR", "HYD", "CCU", "GOI", "PNQ", "AMD", "MAA"
     );
 
     private static final List<String> AIRCRAFT_TYPES = List.of(
@@ -57,7 +57,7 @@ public class FlightDataSeeder implements CommandLineRunner {
         new RouteSeed("CCU", "BLR"),
         new RouteSeed("PNQ", "DEL"),
         new RouteSeed("AMD", "MUM"),
-        new RouteSeed("CHE", "DEL"),
+        new RouteSeed("MAA", "DEL"),
         new RouteSeed("SIN", "LHR")
     );
 
@@ -70,7 +70,7 @@ public class FlightDataSeeder implements CommandLineRunner {
         Map.entry("GOI", new double[] {15.3808, 73.8314}),
         Map.entry("PNQ", new double[] {18.5822, 73.9197}),
         Map.entry("AMD", new double[] {23.0772, 72.6347}),
-        Map.entry("CHE", new double[] {12.9900, 80.1693}),
+        Map.entry("MAA", new double[] {12.9900, 80.1693}),
         Map.entry("DXB", new double[] {25.2532, 55.3657}),
         Map.entry("SIN", new double[] {1.3644, 103.9915}),
         Map.entry("LHR", new double[] {51.4700, -0.4543}),

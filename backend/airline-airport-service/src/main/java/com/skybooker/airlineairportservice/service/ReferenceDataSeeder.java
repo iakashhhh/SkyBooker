@@ -47,7 +47,7 @@ public class ReferenceDataSeeder implements CommandLineRunner {
         upsertAirport("GOI", "Goa International Airport", "Goa", 15.3808, 73.8314);
         upsertAirport("PNQ", "Pune International Airport", "Pune", 18.5822, 73.9197);
         upsertAirport("AMD", "Sardar Vallabhbhai Patel International Airport", "Ahmedabad", 23.0772, 72.6347);
-        upsertAirport("CHE", "Chennai International Airport", "Chennai", 12.9900, 80.1693);
+        upsertAirport("MAA", "Chennai International Airport", "Chennai", 12.9900, 80.1693);
         upsertAirport("DXB", "Dubai International Airport", "Dubai", 25.2532, 55.3657);
         upsertAirport("SIN", "Singapore Changi Airport", "Singapore", 1.3644, 103.9915);
         upsertAirport("LHR", "London Heathrow Airport", "London", 51.4700, -0.4543);
