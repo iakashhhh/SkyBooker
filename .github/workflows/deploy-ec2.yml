@@ -1,0 +1,177 @@
+name: Deploy to EC2
+
+on:
+  workflow_run:
+    workflows: ["Backend CI"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag to deploy (example: sha-<commit>)"
+        required: true
+        type: string
+
+concurrency:
+  group: ec2-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare deployment metadata
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.meta.outputs.should_deploy }}
+      deploy_tag: ${{ steps.meta.outputs.deploy_tag }}
+      source_sha: ${{ steps.meta.outputs.source_sha }}
+    steps:
+      - name: Compute deployment metadata
+        id: meta
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "deploy_tag=${{ inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+            echo "source_sha=manual" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" && \
+                "${{ github.event.workflow_run.event }}" == "push" && \
+                "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "deploy_tag=sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+            echo "source_sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "deploy_tag=" >> "$GITHUB_OUTPUT"
+            echo "source_sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    name: Deploy to production EC2
+    needs: prepare
+    if: ${{ needs.prepare.outputs.should_deploy == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+    env:
+      DEPLOY_TAG: ${{ needs.prepare.outputs.deploy_tag }}
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+      EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve EC2 app directory
+        run: |
+          if [[ -z "${EC2_APP_DIR}" ]]; then
+            echo "EC2_APP_DIR=/home/${EC2_USER}/skybooker" >> "$GITHUB_ENV"
+          else
+            echo "EC2_APP_DIR=${EC2_APP_DIR}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Validate required deployment secrets
+        run: |
+          missing=0
+          for key in EC2_HOST EC2_USER; do
+            if [[ -z "${!key}" ]]; then
+              echo "Missing required secret: ${key}"
+              missing=1
+            fi
+          done
+          if [[ ${missing} -ne 0 ]]; then
+            exit 1
+          fi
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Verify all image tags exist before deployment
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          matrix_json="$(COMPOSE_FILE=docker-compose.yml ruby scripts/ci/docker-build-matrix.rb)"
+          printf '%s' "$matrix_json" > /tmp/docker-matrix.json
+
+          ruby -rjson -e '
+            JSON.parse(File.read("/tmp/docker-matrix.json")).each do |entry|
+              puts "#{ENV.fetch("DOCKERHUB_USERNAME")}/skybooker-#{entry.fetch("service")}:#{ENV.fetch("DEPLOY_TAG")}"
+            end
+          ' > /tmp/expected-images.txt
+
+          echo "Expected image tags:"
+          cat /tmp/expected-images.txt
+
+          attempts=30
+          interval=10
+          for attempt in $(seq 1 ${attempts}); do
+            missing=0
+            while IFS= read -r image; do
+              if ! docker manifest inspect "${image}" >/dev/null 2>&1; then
+                echo "Still waiting for: ${image}"
+                missing=$((missing + 1))
+              fi
+            done < /tmp/expected-images.txt
+
+            if [[ ${missing} -eq 0 ]]; then
+              echo "All images are available for ${DEPLOY_TAG}"
+              exit 0
+            fi
+
+            if [[ ${attempt} -lt ${attempts} ]]; then
+              sleep "${interval}"
+            fi
+          done
+
+          echo "Timed out waiting for one or more Docker tags for ${DEPLOY_TAG}"
+          exit 1
+
+      - name: Configure SSH key and known hosts
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${EC2_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Sync deployment files to EC2
+        run: |
+          ssh "${EC2_USER}@${EC2_HOST}" "mkdir -p '${EC2_APP_DIR}/scripts/deploy' '${EC2_APP_DIR}/docker/caddy'"
+          scp docker-compose.prod.yml "${EC2_USER}@${EC2_HOST}:${EC2_APP_DIR}/docker-compose.prod.yml"
+          scp scripts/deploy/compose-deploy.sh "${EC2_USER}@${EC2_HOST}:${EC2_APP_DIR}/scripts/deploy/compose-deploy.sh"
+          if [[ -f docker/caddy/Caddyfile ]]; then
+            scp docker/caddy/Caddyfile "${EC2_USER}@${EC2_HOST}:${EC2_APP_DIR}/docker/caddy/Caddyfile"
+          fi
+
+      - name: Deploy on EC2
+        run: |
+          ssh "${EC2_USER}@${EC2_HOST}" \
+            "chmod +x '${EC2_APP_DIR}/scripts/deploy/compose-deploy.sh' && \
+             APP_DIR='${EC2_APP_DIR}' \
+             COMPOSE_FILE='docker-compose.prod.yml' \
+             DEPLOY_TAG='${DEPLOY_TAG}' \
+             '${EC2_APP_DIR}/scripts/deploy/compose-deploy.sh'"
+
+      - name: Post-deploy status
+        run: |
+          ssh "${EC2_USER}@${EC2_HOST}" "cd '${EC2_APP_DIR}' && docker compose -f docker-compose.prod.yml ps"
+
+      - name: Deployment summary
+        run: |
+          {
+            echo "## EC2 Deployment"
+            echo "- Tag: \`${DEPLOY_TAG}\`"
+            echo "- Source SHA: \`${{ needs.prepare.outputs.source_sha }}\`"
+            echo "- Target host: \`${EC2_HOST}\`"
+            echo "- Compose file: \`${EC2_APP_DIR}/docker-compose.prod.yml\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dump recent logs when deployment fails
+        if: ${{ failure() }}
+        run: |
+          ssh "${EC2_USER}@${EC2_HOST}" \
+            "cd '${EC2_APP_DIR}' && docker compose -f docker-compose.prod.yml logs --tail=200 --no-color"
