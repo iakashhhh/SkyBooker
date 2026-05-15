@@ -2,6 +2,8 @@ package com.skybooker.notificationservice.controller;
 
 import com.skybooker.notificationservice.dto.NotificationEvent;
 import com.skybooker.notificationservice.dto.NotificationResponse;
+import com.skybooker.notificationservice.dto.SupportInquiryRequest;
+import com.skybooker.notificationservice.dto.SupportInquiryResponse;
 import com.skybooker.notificationservice.service.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,11 @@ public class NotificationController {
     @PostMapping("/publish")
     public NotificationResponse publish(@Valid @RequestBody NotificationEvent event) {
         return notificationService.processEvent(event);
+    }
+
+    @PostMapping("/support")
+    public ResponseEntity<SupportInquiryResponse> submitSupportInquiry(@Valid @RequestBody SupportInquiryRequest request) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(notificationService.submitSupportInquiry(request));
     }
 
     @GetMapping("/user/{userId}")

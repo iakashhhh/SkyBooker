@@ -1,6 +1,6 @@
 <section class="hero-wrap">
   <div class="hero-video-layer" aria-hidden="true">
-    <video class="hero-video" autoplay muted loop playsinline preload="auto">
+    <video #heroVideo class="hero-video" autoplay muted loop playsinline preload="auto" disablepictureinpicture controlsList="nodownload noplaybackrate">
       <source src="/assets/hero/herovideo.mp4" type="video/mp4" />
     </video>
   </div>
@@ -133,30 +133,6 @@
       <div class="feature-icon">{{ item.icon }}</div>
       <h3>{{ item.title }}</h3>
       <p>{{ item.description }}</p>
-    </article>
-  </div>
-</section>
-
-<section class="section page-shell" id="deals">
-  <h2>Popular <span>Destinations</span></h2>
-  <p class="section-subtitle">Explore India's most visited cities</p>
-  <div class="destination-grid">
-    <article class="destination-card reveal-card" #revealCard *ngFor="let d of destinations; let i = index" [style.transitionDelay.s]="i * 0.1">
-      <div class="image-wrap">
-        <img [src]="d.imageUrl" [alt]="d.city" />
-        <div class="image-overlay"></div>
-      </div>
-      <div class="card-body">
-        <h3>{{ d.city }}</h3>
-        <p class="country">{{ d.country }}</p>
-        <div class="card-footer">
-          <div>
-            <small>Starting from</small>
-            <strong>{{ d.price }}</strong>
-          </div>
-          <a class="book-btn" routerLink="/flights/search">Book Now</a>
-        </div>
-      </div>
     </article>
   </div>
 </section>

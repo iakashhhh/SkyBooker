@@ -7,6 +7,7 @@ import { FlightSearchComponent } from './features/flights/search/flight-search.c
 import { PnrStatusPageComponent } from './features/bookings/pnr-status-page/pnr-status-page.component';
 import { FlightResultsComponent } from './features/flights/results/flight-results.component';
 import { LandingPageComponent } from './features/home/landing/landing-page.component';
+import { SupportPageComponent } from './features/support/support-page/support-page.component';
 import { SeatSelectionComponent } from './features/seats/seat-selection/seat-selection.component';
 import { BookingSummaryPageComponent } from './features/bookings/booking-summary-page/booking-summary-page.component';
 import { PassengerFormPageComponent } from './features/passengers/passenger-form-page/passenger-form-page.component';
@@ -36,6 +37,7 @@ export const appRoutes: Routes = [
   { path: 'auth/profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'flights/search', component: FlightSearchComponent },
   { path: 'pnr-status', component: PnrStatusPageComponent },
+  { path: 'support', component: SupportPageComponent },
   { path: 'flights/results', component: FlightResultsComponent },
   { path: 'seats/select', component: SeatSelectionComponent },
   { path: 'booking-summary', component: BookingSummaryPageComponent, canActivate: [authGuard] },

@@ -66,6 +66,8 @@ notification:
     email:
       from: ${NOTIFICATION_EMAIL_FROM:noreply@skybooker.com}
       fallback-domain: ${NOTIFICATION_EMAIL_FALLBACK_DOMAIN:skybooker.local}
+    support:
+      inbox: ${SUPPORT_INBOX_EMAIL:i.akashhhh@gmail.com}
 
 springdoc:
   swagger-ui:

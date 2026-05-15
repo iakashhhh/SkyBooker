@@ -726,7 +726,7 @@ public class BookingServiceImpl implements BookingService {
             payload.put("title", "Booking Confirmed");
             payload.put("message", "Your booking is confirmed. PNR: " + booking.getPnrCode());
             payload.put("channel", "APP");
-            payload.put("channels", List.of("APP", "EMAIL"));
+            payload.put("channels", List.of("APP"));
             payload.put("relatedBookingId", booking.getBookingId());
             payload.put("relatedFlightId", booking.getFlightId());
             payload.put("pnrCode", booking.getPnrCode());

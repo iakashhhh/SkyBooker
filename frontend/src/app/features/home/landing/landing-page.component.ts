@@ -1,16 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, OnDestroy, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 type SearchField = 'originText' | 'destinationText';
-
-interface Destination {
-  city: string;
-  country: string;
-  price: string;
-  imageUrl: string;
-}
 
 interface AirportOption {
   code: string;
@@ -39,8 +32,8 @@ interface Testimonial {
   styleUrl: './landing-page.component.css'
 })
 export class LandingPageComponent implements AfterViewInit, OnDestroy {
-  @ViewChildren('revealCard') revealCards!: QueryList<ElementRef<HTMLElement>>;
   @ViewChildren('popIcon') popIcons!: QueryList<ElementRef<HTMLElement>>;
+  @ViewChild('heroVideo') heroVideo?: ElementRef<HTMLVideoElement>;
   readonly todayDate = this.toIsoDate(new Date());
   readonly currentMonth = this.todayDate.slice(0, 7);
   readonly defaultReturnDate = this.shiftIsoDate(this.todayDate, 5);
@@ -89,33 +82,6 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   });
 
   submitError = '';
-  readonly destinations: Destination[] = [
-    {
-      city: 'Agra',
-      country: 'India',
-      price: '₹4,999',
-      imageUrl: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      city: 'Mumbai',
-      country: 'India',
-      price: '₹5,499',
-      imageUrl: 'https://images.unsplash.com/photo-1595658658481-d53d3f999875?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      city: 'Bangalore',
-      country: 'India',
-      price: '₹6,250',
-      imageUrl: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      city: 'Goa',
-      country: 'India',
-      price: '₹7,999',
-      imageUrl: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80'
-    }
-  ];
-
   readonly featureItems: FeatureItem[] = [
     {
       icon: '⌕',
@@ -173,6 +139,12 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
   ) {}
 
   ngAfterViewInit(): void {
+    const video = this.heroVideo?.nativeElement;
+    if (video) {
+      video.defaultMuted = true;
+      video.muted = true;
+      video.volume = 0;
+    }
     this.observeRevealElements();
   }
 
@@ -356,7 +328,6 @@ export class LandingPageComponent implements AfterViewInit, OnDestroy {
       { threshold: 0.2 }
     );
 
-    this.revealCards.forEach((el) => observer.observe(el.nativeElement));
     this.popIcons.forEach((el) => observer.observe(el.nativeElement));
   }
 

@@ -1,0 +1,90 @@
+<section class="support-shell">
+  <div class="container support-grid">
+    <article class="support-intro card">
+      <p class="eyebrow">SkyBooker Support</p>
+      <h1>How can we help you today?</h1>
+      <p>
+        Share your issue and our support team will respond at the earliest.
+        For this project setup, all requests are delivered to <strong>i.akashhhh&#64;gmail.com</strong>.
+      </p>
+
+      <h3>Quick issue templates</h3>
+      <div class="preset-list">
+        <button
+          type="button"
+          class="preset-btn"
+          *ngFor="let preset of presets"
+          (click)="applyPreset(preset)">
+          {{ preset.label }}
+        </button>
+      </div>
+    </article>
+
+    <article class="support-form card">
+      <h2>Submit a Support Request</h2>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="grid two-col">
+          <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <input id="fullName" type="text" formControlName="fullName" placeholder="Your name" />
+            <p class="error-text" *ngIf="form.controls.fullName.touched && form.controls.fullName.invalid">
+              Enter your full name.
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input id="email" type="email" formControlName="email" placeholder="you@example.com" />
+            <p class="error-text" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+              Enter a valid email.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid two-col">
+          <div class="form-group">
+            <label for="phone">Phone (optional)</label>
+            <input id="phone" type="text" formControlName="phone" placeholder="+91..." />
+          </div>
+          <div class="form-group">
+            <label for="bookingId">Booking ID (optional)</label>
+            <input id="bookingId" type="text" formControlName="bookingId" placeholder="e.g. 44524649-f7f3..." />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Issue Category</label>
+          <select id="category" formControlName="category">
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input id="subject" type="text" formControlName="subject" placeholder="Short summary of your issue" />
+          <p class="error-text" *ngIf="form.controls.subject.touched && form.controls.subject.invalid">
+            Subject should be at least 6 characters.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="message">Describe your issue</label>
+          <textarea
+            id="message"
+            rows="6"
+            formControlName="message"
+            placeholder="Please include steps, expected behavior, and what happened."></textarea>
+          <p class="error-text" *ngIf="form.controls.message.touched && form.controls.message.invalid">
+            Message should be at least 20 characters.
+          </p>
+        </div>
+
+        <p class="success-text" *ngIf="submitSuccess">{{ submitSuccess }}</p>
+        <p class="error-text" *ngIf="submitError">{{ submitError }}</p>
+
+        <button class="btn btn-primary submit-btn" type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Submitting...' : 'Send to Support' }}
+        </button>
+      </form>
+    </article>
+  </div>
+</section>

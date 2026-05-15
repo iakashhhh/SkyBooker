@@ -14,6 +14,8 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.skybooker.notificationservice.dto.NotificationEvent;
 import com.skybooker.notificationservice.dto.NotificationResponse;
+import com.skybooker.notificationservice.dto.SupportInquiryRequest;
+import com.skybooker.notificationservice.dto.SupportInquiryResponse;
 import com.skybooker.notificationservice.entity.Notification;
 import com.skybooker.notificationservice.entity.NotificationChannel;
 import com.skybooker.notificationservice.entity.NotificationStatus;
@@ -47,6 +49,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
@@ -67,6 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final JavaMailSender javaMailSender;
     private final RestTemplate restTemplate;
     private final String emailFrom;
+    private final String supportInboxEmail;
     private final String fallbackEmailDomain;
     private final String bookingServiceBaseUrl;
     private final String authServiceBaseUrl;
@@ -78,6 +82,7 @@ public class NotificationServiceImpl implements NotificationService {
                                    @Value("${notification.integration.auth-base-url:http://localhost:8080}") String authServiceBaseUrl,
                                    @Value("${notification.integration.flight-base-url:http://localhost:8080}") String flightServiceBaseUrl,
                                    @Value("${notification.delivery.email.from:noreply@skybooker.com}") String emailFrom,
+                                   @Value("${notification.delivery.support.inbox:i.akashhhh@gmail.com}") String supportInboxEmail,
                                    @Value("${notification.delivery.email.fallback-domain:skybooker.local}") String fallbackEmailDomain) {
         this.notificationRepository = notificationRepository;
         this.javaMailSender = javaMailSender;
@@ -86,6 +91,7 @@ public class NotificationServiceImpl implements NotificationService {
         this.authServiceBaseUrl = authServiceBaseUrl;
         this.flightServiceBaseUrl = flightServiceBaseUrl;
         this.emailFrom = emailFrom;
+        this.supportInboxEmail = supportInboxEmail;
         this.fallbackEmailDomain = fallbackEmailDomain;
     }
 
@@ -166,6 +172,67 @@ public class NotificationServiceImpl implements NotificationService {
             .toList();
     }
 
+    @Override
+    public SupportInquiryResponse submitSupportInquiry(SupportInquiryRequest request) {
+        String fullName = clean(request.getFullName());
+        String email = clean(request.getEmail());
+        String phone = clean(request.getPhone());
+        String bookingId = clean(request.getBookingId());
+        String category = clean(request.getCategory());
+        String subject = clean(request.getSubject());
+        String message = clean(request.getMessage());
+        String ticketRef = "SUP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
+        String htmlBody = """
+            <html>
+              <body style="font-family:Arial,sans-serif;background:#f6f9ff;padding:18px;">
+                <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:14px;padding:18px;border:1px solid #d7e4f7;">
+                  <h2 style="margin:0 0 10px;color:#184d96;">New Support Request - %s</h2>
+                  <p style="margin:0 0 12px;color:#20344f;">Reference: <strong>%s</strong></p>
+                  <div style="background:#eff6ff;border-radius:10px;padding:12px;">
+                    <p style="margin:0 0 6px;color:#2f4a70;"><strong>Name:</strong> %s</p>
+                    <p style="margin:0 0 6px;color:#2f4a70;"><strong>Email:</strong> %s</p>
+                    <p style="margin:0 0 6px;color:#2f4a70;"><strong>Phone:</strong> %s</p>
+                    <p style="margin:0 0 6px;color:#2f4a70;"><strong>Booking ID:</strong> %s</p>
+                    <p style="margin:0;color:#2f4a70;"><strong>Category:</strong> %s</p>
+                  </div>
+                  <h3 style="margin:14px 0 6px;color:#163b70;">Subject</h3>
+                  <p style="margin:0 0 12px;color:#20344f;">%s</p>
+                  <h3 style="margin:14px 0 6px;color:#163b70;">Issue Details</h3>
+                  <p style="margin:0;color:#20344f;white-space:pre-line;">%s</p>
+                </div>
+              </body>
+            </html>
+            """.formatted(
+            escapeHtml(safeValue(category, "General")),
+            escapeHtml(ticketRef),
+            escapeHtml(safeValue(fullName, "N/A")),
+            escapeHtml(safeValue(email, "N/A")),
+            escapeHtml(safeValue(phone, "Not shared")),
+            escapeHtml(safeValue(bookingId, "Not shared")),
+            escapeHtml(safeValue(category, "General")),
+            escapeHtml(safeValue(subject, "Support query")),
+            escapeHtml(safeValue(message, "No details provided"))
+        );
+
+        try {
+            MimeMessage mail = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mail, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(emailFrom);
+            helper.setTo(safeValue(clean(supportInboxEmail), "i.akashhhh@gmail.com"));
+            helper.setSubject("[SkyBooker Support] " + safeValue(subject, "Support query") + " | " + ticketRef);
+            if (email != null) {
+                helper.setReplyTo(email);
+            }
+            helper.setText(htmlBody, true);
+            javaMailSender.send(mail);
+        } catch (Exception exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to submit support request right now");
+        }
+
+        return new SupportInquiryResponse("Support request submitted successfully.", ticketRef);
+    }
+
     private Notification buildNotification(NotificationEvent event,
                                            NotificationType notificationType,
                                            NotificationChannel channel,
@@ -235,14 +302,13 @@ public class NotificationServiceImpl implements NotificationService {
         helper.setText(toEmailTemplate(notification, event, bookingSnapshot, flightSnapshot), true);
 
         byte[] ticketPdf = fetchTicketPdf(bookingId);
-        if (ticketPdf == null || ticketPdf.length == 0) {
-            LOGGER.warn("Booking ticket PDF unavailable for bookingId={}; using notification fallback template", bookingId);
-            ticketPdf = generateEcardPdf(notification, event, bookingSnapshot, flightSnapshot);
-        } else {
+        if (ticketPdf != null && ticketPdf.length > 0) {
             LOGGER.info("Using booking-service A4 ticket PDF for bookingId={}", bookingId);
+            String attachmentName = bookingId == null ? "ticket-card.pdf" : "ticket-" + bookingId + ".pdf";
+            helper.addAttachment(attachmentName, new ByteArrayResource(ticketPdf));
+        } else {
+            LOGGER.warn("Booking ticket PDF unavailable for bookingId={}; email sent without PDF attachment", bookingId);
         }
-        String attachmentName = bookingId == null ? "ticket-card.pdf" : "ticket-" + bookingId + ".pdf";
-        helper.addAttachment(attachmentName, new ByteArrayResource(ticketPdf));
         javaMailSender.send(mail);
     }
 

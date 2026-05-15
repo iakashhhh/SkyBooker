@@ -2,6 +2,8 @@ package com.skybooker.notificationservice.service;
 
 import com.skybooker.notificationservice.dto.NotificationEvent;
 import com.skybooker.notificationservice.dto.NotificationResponse;
+import com.skybooker.notificationservice.dto.SupportInquiryRequest;
+import com.skybooker.notificationservice.dto.SupportInquiryResponse;
 
 import java.util.List;
 
@@ -16,4 +18,6 @@ public interface NotificationService {
     NotificationResponse markAsRead(Long notificationId, Long requesterId);
 
     List<NotificationResponse> getRecentByRecipient(Long recipientId, int limit);
+
+    SupportInquiryResponse submitSupportInquiry(SupportInquiryRequest request);
 }

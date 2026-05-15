@@ -12,8 +12,7 @@
       <a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{ exact: true }">Flights</a>
       <a routerLink="/pnr-status" routerLinkActive="active-link">Check PNR Status</a>
       <a *ngIf="isLoggedIn" routerLink="/my-bookings" routerLinkActive="active-link">My Bookings</a>
-      <a routerLink="/" fragment="deals">Deals</a>
-      <a routerLink="/" fragment="support">Support</a>
+      <a routerLink="/support" routerLinkActive="active-link">Support</a>
     </nav>
     <nav class="account-nav" *ngIf="!isLoggedIn">
       <a routerLink="/auth/login" routerLinkActive="active-link">Login</a>

@@ -58,6 +58,7 @@ class NotificationServiceImplTest {
             "http://auth",
             "http://flight",
             "noreply@skybooker.com",
+            "i.akashhhh@gmail.com",
             "skybooker.local"
         );
     }
