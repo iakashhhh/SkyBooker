@@ -51,6 +51,7 @@ jobs:
     env:
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_IP: ${{ secrets.SONAR_HOST_IP }}
     steps:
       - name: Check SonarQube availability
         id: sonar-ready
@@ -61,8 +62,17 @@ jobs:
             exit 0
           fi
 
-          if curl -fsS --connect-timeout 5 --max-time 15 "${SONAR_HOST_URL}/api/system/status" >/dev/null; then
+          if curl -fsS --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 10 --max-time 60 "${SONAR_HOST_URL}/api/system/status" >/dev/null; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${SONAR_HOST_IP}" ]]; then
+            host_name="$(echo "${SONAR_HOST_URL}" | sed -E 's#https?://([^/]+).*#\1#')"
+            echo "${SONAR_HOST_IP} ${host_name}" | sudo tee -a /etc/hosts >/dev/null
+            if curl -fsS --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 10 --max-time 60 "${SONAR_HOST_URL}/api/system/status" >/dev/null; then
+              echo "enabled=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "enabled=false" >> "$GITHUB_OUTPUT"
+              echo "SonarQube is unreachable at ${SONAR_HOST_URL}, even with SONAR_HOST_IP fallback. Skipping Sonar scan."
+            fi
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             echo "SonarQube is unreachable at ${SONAR_HOST_URL}. Skipping Sonar scan."
