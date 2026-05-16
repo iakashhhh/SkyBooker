@@ -355,12 +355,50 @@ services:
     depends_on:
       api-gateway:
         condition: service_healthy
+    logging: *default-logging
+
+  sonardb:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonar_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonarqube"]
       interval: 10s
       timeout: 5s
-      retries: 12
-      start_period: 25s
+      retries: 20
+      start_period: 20s
+    logging: *default-logging
+
+  sonarqube:
+    image: sonarqube:lts
+    restart: unless-stopped
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonardb:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_WEB_CONTEXT: /sonarqube
+      SONAR_WEB_JAVAOPTS: -Xms128m -Xmx256m -XX:+HeapDumpOnOutOfMemoryError
+      SONAR_CE_JAVAOPTS: -Xms128m -Xmx256m -XX:+HeapDumpOnOutOfMemoryError
+      SONAR_SEARCH_JAVAOPTS: -Xms256m -Xmx256m -XX:+HeapDumpOnOutOfMemoryError
+    depends_on:
+      sonardb:
+        condition: service_healthy
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+      - sonar_temp:/opt/sonarqube/temp
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9000/sonarqube/api/system/status | grep -Eq '\"status\":\"(UP|DB_MIGRATION_NEEDED|DB_MIGRATION_RUNNING)\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 120s
     logging: *default-logging
 
   reverse-proxy:
@@ -376,13 +414,9 @@ services:
       api-gateway:
         condition: service_healthy
       frontend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 15s
+        condition: service_started
+      sonarqube:
+        condition: service_started
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -392,5 +426,10 @@ services:
 volumes:
   mysql_data:
   rabbitmq_data:
+  sonar_postgres_data:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:
+  sonar_temp:
   caddy_data:
   caddy_config:

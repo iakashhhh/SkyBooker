@@ -11,6 +11,11 @@
     reverse_proxy api-gateway:8080
   }
 
+  @sonarqube path /sonarqube*
+  handle @sonarqube {
+    reverse_proxy sonarqube:9000
+  }
+
   handle {
     reverse_proxy frontend:80
   }

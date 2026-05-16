@@ -52,24 +52,30 @@ jobs:
       SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - name: Check SonarQube secret availability
-        id: sonar-secrets
+      - name: Check SonarQube availability
+        id: sonar-ready
         run: |
-          if [[ -n "${SONAR_HOST_URL}" && -n "${SONAR_TOKEN}" ]]; then
+          if [[ -z "${SONAR_HOST_URL}" || -z "${SONAR_TOKEN}" ]]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "SonarQube secrets are missing. Skipping Sonar scan."
+            exit 0
+          fi
+
+          if curl -fsS --connect-timeout 5 --max-time 15 "${SONAR_HOST_URL}/api/system/status" >/dev/null; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "SonarQube secrets are missing. Skipping Sonar scan."
+            echo "SonarQube is unreachable at ${SONAR_HOST_URL}. Skipping Sonar scan."
           fi
 
       - name: Checkout repository
-        if: ${{ steps.sonar-secrets.outputs.enabled == 'true' }}
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up JDK 21
-        if: ${{ steps.sonar-secrets.outputs.enabled == 'true' }}
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -77,7 +83,7 @@ jobs:
           cache: maven
 
       - name: Set up Node.js 20
-        if: ${{ steps.sonar-secrets.outputs.enabled == 'true' }}
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -85,7 +91,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Generate backend coverage reports
-        if: ${{ steps.sonar-secrets.outputs.enabled == 'true' }}
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
         run: |
           services=(
             admin-server airline-airport-service api-gateway auth-service booking-service
@@ -96,15 +102,15 @@ jobs:
           done
 
       - name: Generate frontend coverage report
-        if: ${{ steps.sonar-secrets.outputs.enabled == 'true' }}
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
         working-directory: frontend
         run: |
           npm ci
           npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
 
       - name: Run SonarQube scan
-        if: ${{ steps.sonar-secrets.outputs.enabled == 'true' }}
-        uses: SonarSource/sonarqube-scan-action@v5
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
