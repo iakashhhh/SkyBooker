@@ -118,9 +118,38 @@ jobs:
           npm ci
           npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
 
-      - name: Run SonarQube scan
+      - name: Publish backend services to SonarQube (separate projects)
+        if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
+        run: |
+          services=(
+            admin-server airline-airport-service api-gateway auth-service booking-service
+            eureka-server flight-service notification-service passenger-service payment-service seat-service
+          )
+          for service in "${services[@]}"; do
+            echo "Publishing SonarQube project: skybooker-${service}"
+            mvn -B -f "backend/${service}/pom.xml" sonar:sonar \
+              -Dsonar.projectKey="skybooker-${service}" \
+              -Dsonar.projectName="SkyBooker ${service}" \
+              -Dsonar.projectVersion="${GITHUB_SHA}" \
+              -Dsonar.host.url="${SONAR_HOST_URL}" \
+              -Dsonar.token="${SONAR_TOKEN}" \
+              -Dsonar.coverage.jacoco.xmlReportPaths="target/site/jacoco/jacoco.xml"
+          done
+
+      - name: Publish frontend to SonarQube (separate project)
         if: ${{ steps.sonar-ready.outputs.enabled == 'true' }}
         uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=skybooker-frontend
+            -Dsonar.projectName=SkyBooker Frontend
+            -Dsonar.projectVersion=${{ github.sha }}
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=src/**/*.spec.ts
+            -Dsonar.exclusions=src/**/*.spec.ts
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}

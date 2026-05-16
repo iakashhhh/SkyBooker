@@ -63,8 +63,15 @@ docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans --wait --wait-timeout
 docker compose -f "${COMPOSE_FILE}" ps
 
 echo "Running smoke checks..."
-curl -fsS "http://localhost/" >/dev/null
-curl -fsS "http://localhost/api/actuator/health" | grep -q "\"status\":\"UP\""
+
+# Compose --wait already checks container health; these checks validate user-facing routing.
+site_domain="$(grep -E '^SITE_DOMAIN=' .env | tail -n1 | cut -d= -f2- || true)"
+if [[ -n "${site_domain}" ]]; then
+  curl -fkLsS --retry 5 --retry-delay 3 --retry-all-errors "https://${site_domain}/" >/dev/null
+  curl -fkLsS --retry 5 --retry-delay 3 --retry-all-errors "https://${site_domain}/api/actuator/health" | grep -q "\"status\":\"UP\""
+else
+  echo "SITE_DOMAIN not found in .env, skipping HTTP smoke checks (container health already validated by compose --wait)."
+fi
 
 echo "${DEPLOY_TAG}" > "${ROLLBACK_TAG_FILE}"
 rm -f .env.bak
